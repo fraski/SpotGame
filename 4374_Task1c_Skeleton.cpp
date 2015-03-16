@@ -108,7 +108,10 @@ void initialiseGame(char grid[][SIZEX], Item& spot,int holes[12][2])
 } //end of initialiseGame
 void placeHoles(char grid[][SIZEX], int holes[12][2]){
 	for (int count = 0; count < 12; count++){
-		grid[holes[count][0]][holes[count][1]] = HOLE;
+		int x, y;
+		x = holes[count][1];
+		y = holes[count][0];
+		grid[x][y] = HOLE;
 	}
 
 
@@ -119,19 +122,14 @@ void generateHoles(int holes[12][2], Item spot){
 	Seed();
 	for (int count = 0;count < 12;count++){
 		int x, y;
-		while ((x = Random(SIZEX - 2)+1) == spot.x && checkCoords(x,holes,0)){
+		while ((x = Random(SIZEX - 2)) == spot.x &&checkCoords(x,holes,0)){
 		}
 		holes[count][0] = x;
-		//cout << x << ",";
-		while ((y = Random(SIZEY - 3)+1) == spot.y && checkCoords(y,holes,1)){
-		}
-		if (y == 11){
-			cout << "xXX";
+		
+		while ((y = Random(SIZEY - 2)) == spot.y && checkCoords(y, holes, 1)){
 		}
 		holes[count][1] = y;
-		//cout << y << endl;
 	}
-	//cout << "stop";
 }
 bool checkCoords(int coord, int holes[12][2], int i){
 	bool isValid = true;
