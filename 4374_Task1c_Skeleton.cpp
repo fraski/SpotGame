@@ -59,6 +59,7 @@ int main()
 	int lives = 5;
 	string message("LET'S START...      "); //current message to player
 	//int holes[12][2]; //holds x and y for each hole
+	//not sure how to do this without this weird work around..
 	Item holes[] = { { HOLE }, { HOLE }, { HOLE }, { HOLE }, { HOLE }, { HOLE }, { HOLE }, { HOLE }, { HOLE }, { HOLE }, { HOLE }, { HOLE } };
 	//action...
 	initialiseGame(grid, spot, holes);           //initialise grid (incl. walls and spot)
