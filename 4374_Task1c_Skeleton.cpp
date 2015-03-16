@@ -23,6 +23,7 @@ const int SIZEX(20);         //horizontal dimension
 const char SPOT('@');        //spot
 const char TUNNEL(' ');      //open space
 const char WALL('#');        //border
+const char HOLE('0');
 //defining the command letters to move the blob on the maze
 const int  UP(72);           //up arrow
 const int  DOWN(80);         //down arrow
@@ -44,11 +45,11 @@ struct Item {
 int main()
 {
 	//function declarations (prototypes)
-	void initialiseGame(char grid[][SIZEX], Item& spot);
+	void initialiseGame(char grid[][SIZEX], Item& spot, int holes[12][2]);
 	bool wantToQuit(int k);
 	bool isArrowKey(int k);
 	int  getKeyPress();
-	void updateGame(char g[][SIZEX], Item& sp, int k, string& mess);
+	void updateGame(char g[][SIZEX], Item& sp, int k, string& mess,int holes[12][2]);
 	void renderGame(const char g[][SIZEX], string mess);
 	void endProgram();
 
@@ -56,16 +57,16 @@ int main()
 	char grid[SIZEY][SIZEX];                //grid for display
 	Item spot = { SPOT };                   //Spot's symbol and position (0, 0) 
 	string message("LET'S START...      "); //current message to player
-
+	int holes[12][2]; //holds x and y for each hole
 	//action...
-	initialiseGame(grid, spot);           //initialise grid (incl. walls and spot)
+	initialiseGame(grid, spot,holes);           //initialise grid (incl. walls and spot)
 	int key(' ');                         //create key to store keyboard events
 	do {
 		renderGame(grid, message);        //render game state on screen
 		message = "                    "; //reset message
 		key = getKeyPress();              //read in next keyboard event
 		if (isArrowKey(key))
-			updateGame(grid, spot, key, message);
+			updateGame(grid, spot, key, message, holes);
 		else
 			message = "INVALID KEY!        "; //set 'Invalid key' message
 	} while (!wantToQuit(key));               //while user does not want to quit
@@ -73,36 +74,78 @@ int main()
 	return 0;
 } //end main
 
-void updateGame(char grid[][SIZEX], Item& spot, int key, string& message)
+void updateGame(char grid[][SIZEX], Item& spot, int key, string& message, int holes[12][2])
 { //updateGame state
 	void updateSpotCoordinates(const char g[][SIZEX], Item& spot, int key, string& mess);
-	void updateGrid(char g[][SIZEX], Item spot);
+	void updateGrid(char g[][SIZEX], Item spot, int holes[12][2]);
 
 	updateSpotCoordinates(grid, spot, key, message);    //update spot coordinates
                                                         //according to key
-	updateGrid(grid, spot);                             //update grid information
+	updateGrid(grid, spot,holes);                             //update grid information
 }
 
 //---------------------------------------------------------------------------
 //----- initialise game state
 //---------------------------------------------------------------------------
 
-void initialiseGame(char grid[][SIZEX], Item& spot)
+void initialiseGame(char grid[][SIZEX], Item& spot,int holes[12][2])
 { //initialise grid and place spot in middle
 	void setGrid(char[][SIZEX]);
 	void setSpotInitialCoordinates(Item& spot);
+	void generateHoles(int holes[12][2], Item spot);
 	void placeSpot(char gr[][SIZEX], Item spot);
+	void placeHoles(char gr[][SIZEX], int holes[12][2]);
 
-	Seed();                            //seed reandom number generator
+	Seed();                            //seed random number generator
 	setSpotInitialCoordinates(spot);   //initialise spot position
 	setGrid(grid);                     //reset empty grid
 	placeSpot(grid, spot);             //set spot in grid
-} //end of initialiseGame
+	generateHoles(holes, spot);
+	placeHoles(grid, holes);
+	//generate and then place holes
 
+
+} //end of initialiseGame
+void placeHoles(char grid[][SIZEX], int holes[12][2]){
+	for (int count = 0; count < 12; count++){
+		grid[holes[count][0]][holes[count][1]] = HOLE;
+	}
+
+
+}
+
+void generateHoles(int holes[12][2], Item spot){
+	bool checkCoords(int, int[12][2], int);
+	Seed();
+	for (int count = 0;count < 12;count++){
+		int x, y;
+		while ((x = Random(SIZEX - 2)+1) == spot.x && checkCoords(x,holes,0)){
+		}
+		holes[count][0] = x;
+		//cout << x << ",";
+		while ((y = Random(SIZEY - 3)+1) == spot.y && checkCoords(y,holes,1)){
+		}
+		if (y == 11){
+			cout << "xXX";
+		}
+		holes[count][1] = y;
+		//cout << y << endl;
+	}
+	//cout << "stop";
+}
+bool checkCoords(int coord, int holes[12][2], int i){
+	bool isValid = true;
+	for (int count = 0; count < 12; count++){
+		if (holes[count][i] == coord){
+			isValid = false;
+		}
+	}
+	return isValid;
+}
 void setSpotInitialCoordinates(Item& spot)
 { //set spot coordinates inside the grid at random at beginning of game
-	spot.y = Random(SIZEY - 2);      //vertical coordinate in range [1..(SIZEY - 2)]
-	spot.x = Random(SIZEX - 2);    //horizontal coordinate in range [1..(SIZEX - 2)]
+	spot.y = SIZEY/ 2;      //vertical coordinate in range [1..(SIZEY - 2)]
+	spot.x = SIZEX/ 2;    //horizontal coordinate in range [1..(SIZEX - 2)]
 } //end of setSpotInitialoordinates
 
 void setGrid(char grid[][SIZEX])
@@ -131,13 +174,14 @@ void placeSpot(char gr[][SIZEX], Item spot)
 //----- update grid state
 //---------------------------------------------------------------------------
 
-void updateGrid(char grid[][SIZEX], Item spot)
+void updateGrid(char grid[][SIZEX], Item spot, int holes[12][2])
 { //update grid configuration after each move
 	void setGrid(char[][SIZEX]);
 	void placeSpot(char g[][SIZEX], Item spot);
 
 	setGrid(grid);	         //reset empty grid
 	placeSpot(grid, spot);	 //set spot in grid
+	placeHoles(grid, holes);
 } //end of updateGrid
 
 //---------------------------------------------------------------------------
@@ -184,11 +228,11 @@ void setKeyDirection(int key, int& dx, int& dy)
 		break;
 	case UP:	//when UP arrow is pressed...
 		dx = 0;
-		dy = +1;	//increase the Y coordinate
+		dy = -1;	//increase the Y coordinate
 		break;
 	case DOWN:	//when DOWN arrow is pressed...
 		dx = 0;
-		dy = -1;	//decrease the Y coordinate
+		dy = +1;	//decrease the Y coordinate
 		break;
 	}
 } //end of setKeyDirection
