@@ -187,8 +187,10 @@ void updateGrid(char grid[][SIZEX], Item spot, int holes[12][2])
 	void placeSpot(char g[][SIZEX], Item spot);
 
 	setGrid(grid);	         //reset empty grid
+	placeHoles(grid, holes); //set holes in grid
 	placeSpot(grid, spot);	 //set spot in grid
-	placeHoles(grid, holes);
+	//must put spot in after holes!
+	
 } //end of updateGrid
 
 //---------------------------------------------------------------------------
@@ -210,6 +212,11 @@ void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, string& mes
 	case TUNNEL:      //can move
 		sp.y += dy;   //go in that Y direction
 		sp.x += dx;   //go in that X direction
+		break;
+	case HOLE:
+		sp.y += dy;
+		sp.x += dx; 
+		//a life would then be removed.
 		break;
 	case WALL:        //hit a wall and stay there
 		cout << '\a'; //beep the alarm
