@@ -1,5 +1,5 @@
 //SKELETON PROGRAM
-//---------------------------------
+//---------------------------------//
 //include libraries
 //include standard libraries
 #include <iostream >         //for output and input: cin >> and cout <<
