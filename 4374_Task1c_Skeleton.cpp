@@ -182,6 +182,14 @@ void setKeyDirection(int key, int& dx, int& dy)
 		dx = +1;    //increase the X coordinate
 		dy = 0;
 		break;
+	case UP:	//when UP arrow is pressed...
+		dx = 0;
+		dy = +1;	//increase the Y coordinate
+		break;
+	case DOWN:	//when DOWN arrow is pressed...
+		dx = 0;
+		dy = -1;	//decrease the Y coordinate
+		break;
 	}
 } //end of setKeyDirection
 
