@@ -45,11 +45,11 @@ struct Item{
 int main()
 {
 	//function declarations (prototypes)
-	void initialiseGame(char grid[][SIZEX], Item& spot, Item holes[]);
+	void initialiseGame(char grid[][SIZEX], Item& spot, Item *holes[]);
 	bool wantToQuit(int k);
 	bool isArrowKey(int k);
 	int  getKeyPress();
-	void updateGame(char g[][SIZEX], Item& sp, int k, string& mess,Item holes[],int& lives);
+	void updateGame(char g[][SIZEX], Item& sp, int k, string& mess, Item *holes[], int& lives);
 	void renderGame(const char g[][SIZEX], string mess);
 	void endProgram();
 
@@ -59,7 +59,13 @@ int main()
 	int lives = 5;
 	string message("LET'S START...      "); //current message to player
 	//int holes[12][2]; //holds x and y for each hole
-	Item holes[] = { { HOLE }, { HOLE }, { HOLE }, { HOLE }, { HOLE }, { HOLE }, { HOLE }, { HOLE }, { HOLE }, { HOLE }, { HOLE }, { HOLE } };
+	//not sure how to do this without this weird work around..
+	Item * holes[12];
+	for (int i = 0; i < 12; i++) {
+		holes[i] = new Item{ HOLE };
+
+	}
+
 	//action...
 	initialiseGame(grid, spot, holes);           //initialise grid (incl. walls and spot)
 	int key(' ');                         //create key to store keyboard events
@@ -77,27 +83,27 @@ int main()
 	return 0;
 } //end main
 
-void updateGame(char grid[][SIZEX], Item& spot, int key, string& message, Item holes[],int& lives)
+void updateGame(char grid[][SIZEX], Item& spot, int key, string& message, Item *holes[], int& lives)
 { //updateGame state
 	void updateSpotCoordinates(const char g[][SIZEX], Item& spot, int key, string& mess, int& lives);
-	void updateGrid(char g[][SIZEX], Item spot, Item holes[]);
+	void updateGrid(char g[][SIZEX], Item spot, Item *holes[]);
 
-	updateSpotCoordinates(grid, spot, key, message,lives);    //update spot coordinates
-                                                        //according to key
-	updateGrid(grid, spot,holes);                             //update grid information
+	updateSpotCoordinates(grid, spot, key, message, lives);    //update spot coordinates
+	//according to key
+	updateGrid(grid, spot, holes);                             //update grid information
 }
 
 //---------------------------------------------------------------------------
 //----- initialise game state
 //---------------------------------------------------------------------------
 
-void initialiseGame(char grid[][SIZEX], Item& spot, Item holes[])
+void initialiseGame(char grid[][SIZEX], Item& spot, Item *holes[])
 { //initialise grid and place spot in middle
 	void setGrid(char[][SIZEX]);
 	void setSpotInitialCoordinates(Item& spot);
-	void generateHoles(Item holes[], Item spot);
+	void generateHoles(Item *holes[], Item spot);
 	void placeSpot(char gr[][SIZEX], Item spot);
-	void placeHoles(char gr[][SIZEX], Item holes[]);
+	void placeHoles(char gr[][SIZEX], Item *holes[]);
 
 	Seed();                            //seed random number generator
 	setSpotInitialCoordinates(spot);   //initialise spot position
@@ -109,40 +115,40 @@ void initialiseGame(char grid[][SIZEX], Item& spot, Item holes[])
 
 
 } //end of initialiseGame
-void placeHoles(char grid[][SIZEX], Item holes[]){
+void placeHoles(char grid[][SIZEX], Item *holes[]){
 	for (int count = 0; count < 12; count++){
 		int x, y;
-		y = holes[count].y;
-		x = holes[count].x;
+		y = (*holes[count]).y;
+		x = (*holes[count]).x;
 		//grid[row][col]
 		grid[y][x] = HOLE;
 	}
 
 }
 
-void generateHoles(Item holes[], Item spot){
-	bool checkCoords(int, int, Item[]);
+void generateHoles(Item *holes[], Item spot){
+	bool checkCoords(int, int, Item*[]);
 	Seed();
-	for (int count = 0;count < 12;count++){
+	for (int count = 0; count < 12; count++){
 		int x, y;
 		do{
 			while ((y = Random(SIZEY - 2)) == spot.y){
-			//will repeat while loop if the Random number generated
-			//is either the spots location, or other hole locations
+				//will repeat while loop if the Random number generated
+				//is either the spots location, or other hole locations
 			}
 			while ((x = Random(SIZEX - 2)) == spot.x){
-			//will repeat while loop if the Random number generated
-			//is either the spots location, or other hole locations
+				//will repeat while loop if the Random number generated
+				//is either the spots location, or other hole locations
 			}
 		} while (!checkCoords(x, y, holes));
-		holes[count].y = y;
-		holes[count].x = x;
+		(*holes[count]).y = y;
+		(*holes[count]).x = x;
 	}
 }
-bool checkCoords(int x,int y, Item holes[]){
+bool checkCoords(int x, int y, Item *holes[]){
 	bool isValid = true;
 	for (int count = 0; count < 12; count++){
-		if (holes[count].x == x && holes[count].y == y){
+		if ((*holes[count]).x == x && (*holes[count]).y == y){
 			isValid = false;
 		}
 	}
@@ -150,8 +156,8 @@ bool checkCoords(int x,int y, Item holes[]){
 }
 void setSpotInitialCoordinates(Item& spot)
 { //set spot coordinates inside the grid at random at beginning of game
-	spot.y = SIZEY/ 2;      //vertical coordinate in range [1..(SIZEY - 2)]
-	spot.x = SIZEX/ 2;    //horizontal coordinate in range [1..(SIZEX - 2)]
+	spot.y = SIZEY / 2;      //vertical coordinate in range [1..(SIZEY - 2)]
+	spot.x = SIZEX / 2;    //horizontal coordinate in range [1..(SIZEX - 2)]
 } //end of setSpotInitialoordinates
 
 void setGrid(char grid[][SIZEX])
@@ -180,22 +186,22 @@ void placeSpot(char gr[][SIZEX], Item spot)
 //----- update grid state
 //---------------------------------------------------------------------------
 
-void updateGrid(char grid[][SIZEX], Item spot, Item holes[])
+void updateGrid(char grid[][SIZEX], Item spot, Item *holes[])
 { //update grid configuration after each move
 	void setGrid(char[][SIZEX]);
 	void placeSpot(char g[][SIZEX], Item spot);
-	void placeHoles(char[][SIZEX], Item holes[]);
+	void placeHoles(char[][SIZEX], Item *holes[]);
 	setGrid(grid);	         //reset empty grid
 	placeHoles(grid, holes); //set holes in grid
 	placeSpot(grid, spot);	 //set spot in grid
 	//must put spot in after holes!
-	
+
 } //end of updateGrid
 
 //---------------------------------------------------------------------------
 //----- move the spot
 //---------------------------------------------------------------------------
-void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, string& mess,int& lives)
+void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, string& mess, int& lives)
 { //move spot in required direction
 	void setKeyDirection(int k, int& dx, int& dy);
 
@@ -214,7 +220,7 @@ void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, string& mes
 		break;
 	case HOLE:
 		sp.y += dy;
-		sp.x += dx; 
+		sp.x += dx;
 		//a life would then be removed.
 		lives--;
 		break;
@@ -257,7 +263,7 @@ int getKeyPress()
 	keyPressed = getch();      //read in the selected arrow key or command letter
 	while (keyPressed == 224)     //ignore symbol following cursor key
 		keyPressed = getch();
-	return(keyPressed);   
+	return(keyPressed);
 } //end of getKeyPress
 
 bool isArrowKey(int key)
