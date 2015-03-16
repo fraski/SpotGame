@@ -23,7 +23,7 @@ const int SIZEX(20);         //horizontal dimension
 const char SPOT('@');        //spot
 const char TUNNEL(' ');      //open space
 const char WALL('#');        //border
-const char HOLE('0');
+const char HOLE('0');		//hole 
 //defining the command letters to move the blob on the maze
 const int  UP(72);           //up arrow
 const int  DOWN(80);         //down arrow
@@ -109,32 +109,41 @@ void initialiseGame(char grid[][SIZEX], Item& spot,int holes[12][2])
 void placeHoles(char grid[][SIZEX], int holes[12][2]){
 	for (int count = 0; count < 12; count++){
 		int x, y;
-		x = holes[count][1];
 		y = holes[count][0];
-		grid[x][y] = HOLE;
+		x = holes[count][1];
+		//grid[row][col]
+		grid[y][x] = HOLE;
 	}
 
 
 }
 
 void generateHoles(int holes[12][2], Item spot){
-	bool checkCoords(int, int[12][2], int);
+	bool checkCoords(int, int, int[12][2]);
 	Seed();
 	for (int count = 0;count < 12;count++){
 		int x, y;
-		while ((x = Random(SIZEX - 2)) == spot.x &&checkCoords(x,holes,0)){
-		}
-		holes[count][0] = x;
+		do{
+			while ((y = Random(SIZEY - 2)) == spot.y){
+			//will repeat while loop if the Random number generated
+			//is either the spots location, or other hole locations
+			}
+			while ((x = Random(SIZEX - 2)) == spot.x){
+			//will repeat while loop if the Random number generated
+			//is either the spots location, or other hole locations
+			}
+		} while (!checkCoords(x, y, holes));
+		holes[count][0] = y;
+		holes[count][1] = x;
 		
-		while ((y = Random(SIZEY - 2)) == spot.y && checkCoords(y, holes, 1)){
-		}
-		holes[count][1] = y;
+		cout << "(" << x << "," << y << ")" << endl;
 	}
+	cout << "stop";
 }
-bool checkCoords(int coord, int holes[12][2], int i){
+bool checkCoords(int x,int y, int holes[12][2]){
 	bool isValid = true;
 	for (int count = 0; count < 12; count++){
-		if (holes[count][i] == coord){
+		if (holes[count][0] == x && holes[count][1] == y){
 			isValid = false;
 		}
 	}
