@@ -6,6 +6,7 @@
 #include <iomanip>           //for formatted output in 'cout'
 #include <conio.h>           //for getch()
 #include <string>            //for string
+#include <vector>
 using namespace std;
 
 //include our own libraries
@@ -47,11 +48,11 @@ struct Item{
 int main()
 {
 	//function declarations (prototypes)
-	void initialiseGame(char grid[][SIZEX], Item& spot, Item holes[], Item pills[], Item zombies[]);
+	void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item> &holes, vector<Item> &pills, vector<Item> &zombies);
 	bool wantToQuit(int k);
 	bool isArrowKey(int k);
 	int  getKeyPress();
-	void updateGame(char g[][SIZEX], Item& sp, int k, string& mess,Item holes[],Item pills[],int& lives, Item zombies[]);
+	void updateGame(char g[][SIZEX], Item& sp, int k, string& mess, vector<Item> &holes, vector<Item> &pills, int& lives, vector<Item> &zombies );
 	void renderGame(const char g[][SIZEX], string mess);
 	void endProgram();
 
@@ -62,9 +63,10 @@ int main()
 	string message("LET'S START...      "); //current message to player
 	//int holes[12][2]; //holds x and y for each hole
 	//not sure how to do this without this weird work around..
-	Item holes[] = { { HOLE }, { HOLE }, { HOLE }, { HOLE }, { HOLE }, { HOLE }, { HOLE }, { HOLE }, { HOLE }, { HOLE }, { HOLE }, { HOLE } };
-	Item pills[] = { { PILL }, { PILL }, { PILL }, { PILL }, { PILL }, { PILL } };
-	Item zombies[] = { { ZOMBIE }, { ZOMBIE }, { ZOMBIE }, { ZOMBIE } };
+	vector<Item> holes;
+	vector<Item> pills;
+	vector<Item> zombies;
+	
 	//action...
 	initialiseGame(grid, spot, holes, pills, zombies);           //initialise grid (incl. walls and spot)
 	int key(' ');                         //create key to store keyboard events
@@ -82,10 +84,10 @@ int main()
 	return 0;
 } //end main
 
-void updateGame(char grid[][SIZEX], Item& spot, int key, string& message, Item holes[], Item pills[] ,int& lives, Item zombies[])
+void updateGame(char grid[][SIZEX], Item& spot, int key, string& message, vector<Item> &holes, vector<Item> &pills ,int& lives, vector<Item> &zombies)
 { //updateGame state
 	void updateSpotCoordinates(const char g[][SIZEX], Item& spot, int key, string& mess, int& lives);
-	void updateGrid(char g[][SIZEX], Item spot, Item holes[], Item pills[], Item zombies[], int key);
+	void updateGrid(char g[][SIZEX], Item spot, vector<Item> &holes, vector<Item> &pills, vector<Item> &zombies, int key);
 
 	updateSpotCoordinates(grid, spot, key, message,lives);    //update spot coordinates
                                                         //according to key
@@ -96,21 +98,21 @@ void updateGame(char grid[][SIZEX], Item& spot, int key, string& message, Item h
 //----- initialise game state
 //---------------------------------------------------------------------------
 
-void initialiseGame(char grid[][SIZEX], Item& spot, Item holes[], Item pills[], Item zombies[])
+void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item> &holes, vector<Item> &pills , vector<Item> &zombies)
 { //initialise grid and place spot in middle
 	void setGrid(char[][SIZEX]);
 	void setSpotInitialCoordinates(Item& spot);
 
-	void generateZombies(Item zombies[]);
-	void placeZombies(char gr[][SIZEX], Item zombies[]);
+	void generateZombies(vector<Item> &zombie);
+	void placeZombies(char gr[][SIZEX], vector<Item> zombies);
 
 	void placeSpot(char gr[][SIZEX], Item spot);
 
-	void generateHoles(Item holes[], Item spot, Item zombies[]);
-	void placeHoles(char gr[][SIZEX], Item holes[]);
+	void generateHoles(vector<Item> &holes, Item spot, vector<Item> zombies);
+	void placeHoles(char gr[][SIZEX], vector<Item> holes);
 
-	void generatePills(Item pills[], Item spot, Item holes[], Item zombies[]);
-	void placePills(char gr[][SIZEX], Item pills[]);
+	void generatePills(vector<Item> &pills, Item spot, vector<Item> holes, vector<Item> zombie);
+	void placePills(char gr[][SIZEX], vector<Item> pills);
 	
 
 	Seed();                            //seed random number generator
@@ -132,91 +134,101 @@ void initialiseGame(char grid[][SIZEX], Item& spot, Item holes[], Item pills[], 
 
 } //end of initialiseGame
 
-void placeZombies(char grid[][SIZEX], Item zombies[]){
-	for (int count = 0; count < 4; count++){
+void placeZombies(char grid[][SIZEX], vector<Item> zombies){
+	for (Item zombie:zombies){
 		int x, y;
-		y = zombies[count].y;
-		x = zombies[count].x;
-		//grid[row][col]
+		//(zombies.at(count)).y;
+		y = zombie.y;
+		x = zombie.x;
 		grid[y][x] = ZOMBIE;
 	}
 
 }
 
-void generateZombies(Item zombies[]){
+void generateZombies(vector<Item> &zombies){
+	//do we need a for loop here? 
+	//seems pointless, we could literally just have 
+	//zombies[0].x = 1
+	//zombies[1].x = .. etc
+
 	for (int count = 0; count < 4; count++){
 		int x, y;
 		switch (count)
 		{
 		case 0 :
-			zombies[count].x = 1;
-			zombies[count].y = 1;
+			x = 1;
+			y = 1;
+
 			break;
 		case 1 :
-			zombies[count].x = 1;
-			zombies[count].y = 10;
+			x = 1;
+			y = 10;
 			break;
 		case 2:
-			zombies[count].x = 18;
-			zombies[count].y = 1;
+			x = 18;
+			y = 1;
 			break;
 		case 3:
-			zombies[count].x = 18;
-			zombies[count].y = 10;
+			x = 18;
+			y = 10;
 			break;
 		}
+		Item zombie = { ZOMBIE, x, y };
+		zombies.push_back(zombie);
 	}
 }
 
-void moveZombies(char grid[][SIZEX], Item zombies[], Item spot, int key)
+void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key)
 {
 	//this procedure is VERY FLAWED - only 1 zombie moves, and this is in relation to what arrow is pressed. zombie also can go through walls and holes, etc
-	for (int count = 0; count < 4; count++)
+	//attempted to change it, got all 4 moving, but they are WAY too smart. I think we should add some kind of random element in it
+	int count = 0;
+	for (Item zombie : zombies)
 	{
-		switch (count){
-		case 0 :
-			switch (key){
-			case UP:
-				zombies[count].y = zombies[count].y + 1;
-				break;
-			case DOWN:
-				zombies[count].y = zombies[count].y - 1;
-				break;
-			case RIGHT:
-				zombies[count].x = zombies[count].x - 1;
-				break;
-			case LEFT:
-				zombies[count].x = zombies[count].x + 1;
-				break;
-			}
-			switch (/*Zombies new position*/count)
-			{		//...depending on what's on the target position in grid...
+		if (zombie.x > spot.x){
+			zombie.x = zombie.x-1;
+			cout << "1";
+		}
+		else if (zombie.x < spot.x){
+			zombie.x++;
+			cout << "2";
+		}else if (zombie.y < spot.y){
+			zombie.y++;
+			cout << "3";
+		}
+		else if (zombie.y > spot.y){
+			cout << "4";
+			zombie.y--;
+		}
+		zombies.at(count).x = zombie.x;
+		zombies.at(count).y = zombie.y;
+		/*
+		switch (/*Zombies new position)
+		{		//...depending on what's on the target position in grid...
 			case HOLE:
 				//ERASE ZOMBIE
 				break;
 			case WALL:        
 				//GO OTHER DIRECTION??
 				break;
-			}
-			break;
-
-		}
+		}*/
+		count++;
 	}
 }
 
-void placeHoles(char grid[][SIZEX], Item holes[]){
-	for (int count = 0; count < 12; count++){
+void placeHoles(char grid[][SIZEX], vector<Item> holes){
+	for (Item hole:holes){
 		int x, y;
-		y = holes[count].y;
-		x = holes[count].x;
+		y = hole.y;
+		x = hole.x;
 		//grid[row][col]
 		grid[y][x] = HOLE;
 	}
 
 }
 
-void generateHoles(Item holes[], Item spot, Item zombies[]){
-	bool checkHoleCoords(int, int, Item[], Item[]);
+void generateHoles(vector<Item> &holes, Item spot, vector<Item> zombies){
+	bool checkHoleCoords(int, int, vector<Item>, vector<Item>);
 	Seed();
 	for (int count = 0;count < 12;count++){
 		int x, y;
@@ -230,39 +242,40 @@ void generateHoles(Item holes[], Item spot, Item zombies[]){
 			//is either the spots location, or other hole locations
 			}
 		} while (!checkHoleCoords(x, y, holes, zombies));
-		holes[count].y = y;
-		holes[count].x = x;
+		Item hole = { HOLE, x, y };
+		holes.push_back(hole);
 	}
+	cout << "stop";
 }
 
-bool checkHoleCoords(int x,int y, Item holes[], Item zombies[]){
+bool checkHoleCoords(int x, int y, vector<Item> holes, vector<Item> zombies){
 	bool isValid = true;
-	for (int count = 0; count < 12; count++){
-		if (holes[count].x == x && holes[count].y == y){
+	for (int count = 0; count < holes.size(); count++){
+		if (holes.at(count).x == x && holes.at(count).y == y){
 			isValid = false;
 		}
 	}
-	for (int count = 0; count < 4; count++){
-		if (zombies[count].x == x && zombies[count].y == y){
+	for (int count = 0; count < zombies.size(); count++){
+		if (zombies.at(count).x == x && zombies.at(count).x == y){
 			isValid = false;
 		}
 	}
 	return isValid;
 }
 
-void placePills(char grid[][SIZEX], Item pills[]){
-	for (int count = 0; count < 6; count++){
+void placePills(char grid[][SIZEX], vector<Item> pills){
+	for (Item pill:pills){
 		int x, y;
-		y = pills[count].y;
-		x = pills[count].x;
+		y = pill.y;
+		x = pill.x;
 		//grid[row][col]
 		grid[y][x] = PILL;
 	}
 
 }
 
-void generatePills(Item pills[], Item spot, Item holes[], Item zombies[]){
-	bool checkPillCoords(int, int, Item[], Item[], Item[]);
+void generatePills(vector<Item> &pills, Item spot, vector<Item> holes, vector<Item> zombies){
+	bool checkPillCoords(int, int, vector<Item>, vector<Item>, vector<Item> );
 	Seed();
 	for (int count = 0; count < 6; count++){
 		int x, y;
@@ -276,27 +289,28 @@ void generatePills(Item pills[], Item spot, Item holes[], Item zombies[]){
 				//is either the spots location, or other hole locations
 			}
 		} while (!checkPillCoords(x, y, pills, holes, zombies));
-		pills[count].y = y;
-		pills[count].x = x;
+		Item pill = { PILL, x, y };
+		pills.push_back(pill);
 	}
 }
-bool checkPillCoords(int x, int y, Item pills[], Item holes[], Item zombies[]){
+bool checkPillCoords(int x, int y, vector<Item> pills, vector<Item> holes, vector<Item> zombies){
 	bool isValid = true;
-	for (int count = 0; count < 12; count++){
-		if (holes[count].x == x && holes[count].y == y){
+	for (int count = 0; count < holes.size(); count++){
+		if (holes.at(count).x == x && holes.at(count).y == y){
 			isValid = false;
 		}
 	}
-	for (int count = 0; count < 6; count++){
-		if (pills[count].x == x && pills[count].y == y){
+	for (int count = 0; count < zombies.size(); count++){
+		if (zombies.at(count).x == x && zombies.at(count).x == y){
 			isValid = false;
 		}
 	}
-	for (int count = 0; count < 4; count++){
-		if (zombies[count].x == x && zombies[count].y == y){
+	for (int count = 0; count < pills.size(); count++){
+		if (pills.at(count).x == x && pills.at(count).y == y){
 			isValid = false;
 		}
 	}
+	
 
 	return isValid;
 }
@@ -333,14 +347,14 @@ void placeSpot(char gr[][SIZEX], Item spot)
 //----- update grid state
 //---------------------------------------------------------------------------
 
-void updateGrid(char grid[][SIZEX], Item spot, Item holes[], Item pills[], Item zombies[], int key)
+void updateGrid(char grid[][SIZEX], Item spot, vector<Item> &holes, vector<Item> &pills, vector<Item> &zombies, int key)
 { //update grid configuration after each move
 	void setGrid(char[][SIZEX]);
 	void placeSpot(char g[][SIZEX], Item spot);
-	void placeHoles(char[][SIZEX], Item holes[]);
-	void placePills(char[][SIZEX], Item pills[]);
-	void placeZombies(char[][SIZEX], Item zombies[]);
-	void moveZombies(char[][SIZEX], Item zombies[], Item spot, int key);
+	void placeHoles(char[][SIZEX], vector<Item> holes);
+	void placePills(char[][SIZEX], vector<Item> pills);
+	void placeZombies(char[][SIZEX], vector<Item> zombies);
+	void moveZombies(char[][SIZEX], vector<Item> &zombies, Item spot, int key);
 	setGrid(grid);	         //reset empty grid
 	placeHoles(grid, holes); //set holes in grid
 	placeSpot(grid, spot);	 //set spot in grid
