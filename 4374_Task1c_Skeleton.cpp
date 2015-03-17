@@ -85,11 +85,11 @@ int main()
 void updateGame(char grid[][SIZEX], Item& spot, int key, string& message, Item holes[], Item pills[] ,int& lives, Item zombies[])
 { //updateGame state
 	void updateSpotCoordinates(const char g[][SIZEX], Item& spot, int key, string& mess, int& lives);
-	void updateGrid(char g[][SIZEX], Item spot, Item holes[], Item pills[], Item zombies[]);
+	void updateGrid(char g[][SIZEX], Item spot, Item holes[], Item pills[], Item zombies[], int key);
 
 	updateSpotCoordinates(grid, spot, key, message,lives);    //update spot coordinates
                                                         //according to key
-	updateGrid(grid, spot, holes, pills, zombies);                             //update grid information
+	updateGrid(grid, spot, holes, pills, zombies, key);                             //update grid information
 }
 
 //---------------------------------------------------------------------------
@@ -164,6 +164,42 @@ void generateZombies(Item zombies[]){
 			zombies[count].x = 18;
 			zombies[count].y = 10;
 			break;
+		}
+	}
+}
+
+void moveZombies(char grid[][SIZEX], Item zombies[], Item spot, int key)
+{
+	//this procedure is VERY FLAWED - only 1 zombie moves, and this is in relation to what arrow is pressed. zombie also can go through walls and holes, etc
+	for (int count = 0; count < 4; count++)
+	{
+		switch (count){
+		case 0 :
+			switch (key){
+			case UP:
+				zombies[count].y = zombies[count].y + 1;
+				break;
+			case DOWN:
+				zombies[count].y = zombies[count].y - 1;
+				break;
+			case RIGHT:
+				zombies[count].x = zombies[count].x - 1;
+				break;
+			case LEFT:
+				zombies[count].x = zombies[count].x + 1;
+				break;
+			}
+			switch (/*Zombies new position*/count)
+			{		//...depending on what's on the target position in grid...
+			case HOLE:
+				//ERASE ZOMBIE
+				break;
+			case WALL:        
+				//GO OTHER DIRECTION??
+				break;
+			}
+			break;
+
 		}
 	}
 }
@@ -297,17 +333,19 @@ void placeSpot(char gr[][SIZEX], Item spot)
 //----- update grid state
 //---------------------------------------------------------------------------
 
-void updateGrid(char grid[][SIZEX], Item spot, Item holes[], Item pills[], Item zombies[])
+void updateGrid(char grid[][SIZEX], Item spot, Item holes[], Item pills[], Item zombies[], int key)
 { //update grid configuration after each move
 	void setGrid(char[][SIZEX]);
 	void placeSpot(char g[][SIZEX], Item spot);
 	void placeHoles(char[][SIZEX], Item holes[]);
 	void placePills(char[][SIZEX], Item pills[]);
 	void placeZombies(char[][SIZEX], Item zombies[]);
+	void moveZombies(char[][SIZEX], Item zombies[], Item spot, int key);
 	setGrid(grid);	         //reset empty grid
 	placeHoles(grid, holes); //set holes in grid
 	placeSpot(grid, spot);	 //set spot in grid
 	placePills(grid, pills); //set pills in grid
+	moveZombies(grid, zombies, spot, key);
 	placeZombies(grid, zombies);  //set zombies in grid
 	//must put spot in after holes!
 	
