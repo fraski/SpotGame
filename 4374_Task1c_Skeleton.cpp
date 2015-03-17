@@ -39,6 +39,13 @@ const char QUIT('Q');        //end the game
 struct Item{
 	const char symbol;	     //symbol on grid
 	int x, y;			     //coordinates
+	Item operator=(Item a){
+		char *ptr = (char*)&symbol;
+		*ptr = a.symbol;
+		x = a.x;
+		y = a.y;
+		return a;
+	}
 };
 
 //---------------------------------------------------------------------------
@@ -52,7 +59,7 @@ int main()
 	bool wantToQuit(int k);
 	bool isArrowKey(int k);
 	int  getKeyPress();
-	void updateGame(char g[][SIZEX], Item& sp, int k, string& mess, vector<Item> &holes, vector<Item> &pills, int& lives, vector<Item> &zombies );
+	void updateGame(char g[][SIZEX], Item& sp, int k, string& mess, vector<Item> &holes, vector<Item> &pills, int& lives, vector<Item> &zombies);
 	void renderGame(const char g[][SIZEX], string mess);
 	void endProgram();
 
@@ -66,7 +73,7 @@ int main()
 	vector<Item> holes;
 	vector<Item> pills;
 	vector<Item> zombies;
-	
+
 	//action...
 	initialiseGame(grid, spot, holes, pills, zombies);           //initialise grid (incl. walls and spot)
 	int key(' ');                         //create key to store keyboard events
@@ -84,13 +91,13 @@ int main()
 	return 0;
 } //end main
 
-void updateGame(char grid[][SIZEX], Item& spot, int key, string& message, vector<Item> &holes, vector<Item> &pills ,int& lives, vector<Item> &zombies)
+void updateGame(char grid[][SIZEX], Item& spot, int key, string& message, vector<Item> &holes, vector<Item> &pills, int& lives, vector<Item> &zombies)
 { //updateGame state
 	void updateSpotCoordinates(const char g[][SIZEX], Item& spot, int key, string& mess, int& lives);
 	void updateGrid(char g[][SIZEX], Item spot, vector<Item> &holes, vector<Item> &pills, vector<Item> &zombies, int key);
 
-	updateSpotCoordinates(grid, spot, key, message,lives);    //update spot coordinates
-                                                        //according to key
+	updateSpotCoordinates(grid, spot, key, message, lives);    //update spot coordinates
+	//according to key
 	updateGrid(grid, spot, holes, pills, zombies, key);                             //update grid information
 }
 
@@ -98,7 +105,7 @@ void updateGame(char grid[][SIZEX], Item& spot, int key, string& message, vector
 //----- initialise game state
 //---------------------------------------------------------------------------
 
-void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item> &holes, vector<Item> &pills , vector<Item> &zombies)
+void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item> &holes, vector<Item> &pills, vector<Item> &zombies)
 { //initialise grid and place spot in middle
 	void setGrid(char[][SIZEX]);
 	void setSpotInitialCoordinates(Item& spot);
@@ -113,7 +120,7 @@ void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item> &holes, vector<
 
 	void generatePills(vector<Item> &pills, Item spot, vector<Item> holes, vector<Item> zombie);
 	void placePills(char gr[][SIZEX], vector<Item> pills);
-	
+
 
 	Seed();                            //seed random number generator
 	setSpotInitialCoordinates(spot);   //initialise spot position
@@ -135,7 +142,7 @@ void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item> &holes, vector<
 } //end of initialiseGame
 
 void placeZombies(char grid[][SIZEX], vector<Item> zombies){
-	for (Item zombie:zombies){
+	for (Item zombie : zombies){
 		int x, y;
 		//(zombies.at(count)).y;
 		y = zombie.y;
@@ -155,12 +162,12 @@ void generateZombies(vector<Item> &zombies){
 		int x, y;
 		switch (count)
 		{
-		case 0 :
+		case 0:
 			x = 1;
 			y = 1;
 
 			break;
-		case 1 :
+		case 1:
 			x = 1;
 			y = 10;
 			break;
@@ -183,16 +190,21 @@ void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key)
 	//this procedure is VERY FLAWED - only 1 zombie moves, and this is in relation to what arrow is pressed. zombie also can go through walls and holes, etc
 	//attempted to change it, got all 4 moving, but they are WAY too smart. I think we should add some kind of random element in it
 	int count = 0;
-	for (Item zombie : zombies)
+	for (Item zombie : zombies){
+		count++;
+	}
+	for (int x = 0; x < count; x++)
 	{
+		Item zombie = zombies[x];
 		if (zombie.x > spot.x){
-			zombie.x = zombie.x-1;
+			zombie.x = zombie.x - 1;
 			cout << "1";
 		}
 		else if (zombie.x < spot.x){
 			zombie.x++;
 			cout << "2";
-		}else if (zombie.y < spot.y){
+		}
+		else if (zombie.y < spot.y){
 			zombie.y++;
 			cout << "3";
 		}
@@ -200,24 +212,26 @@ void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key)
 			cout << "4";
 			zombie.y--;
 		}
-		zombies.at(count).x = zombie.x;
-		zombies.at(count).y = zombie.y;
-		/*
-		switch (/*Zombies new position)
+		zombies.at(x).x = zombie.x;
+		zombies.at(x).y = zombie.y;
+
+		switch (grid[zombie.y][zombie.x])
 		{		//...depending on what's on the target position in grid...
-			case HOLE:
-				//ERASE ZOMBIE
-				break;
-			case WALL:        
-				//GO OTHER DIRECTION??
-				break;
-		}*/
-		count++;
+		case HOLE:
+			cout << "here";
+			zombies.erase(zombies.begin() + x);
+			x--;
+			count--;
+			break;
+		case WALL:
+			//GO OTHER DIRECTION??
+			break;
+		}
 	}
 }
 
 void placeHoles(char grid[][SIZEX], vector<Item> holes){
-	for (Item hole:holes){
+	for (Item hole : holes){
 		int x, y;
 		y = hole.y;
 		x = hole.x;
@@ -230,16 +244,16 @@ void placeHoles(char grid[][SIZEX], vector<Item> holes){
 void generateHoles(vector<Item> &holes, Item spot, vector<Item> zombies){
 	bool checkHoleCoords(int, int, vector<Item>, vector<Item>);
 	Seed();
-	for (int count = 0;count < 12;count++){
+	for (int count = 0; count < 12; count++){
 		int x, y;
 		do{
 			while ((y = Random(SIZEY - 2)) == spot.y){
-			//will repeat while loop if the Random number generated
-			//is either the spots location, or other hole locations
+				//will repeat while loop if the Random number generated
+				//is either the spots location, or other hole locations
 			}
 			while ((x = Random(SIZEX - 2)) == spot.x){
-			//will repeat while loop if the Random number generated
-			//is either the spots location, or other hole locations
+				//will repeat while loop if the Random number generated
+				//is either the spots location, or other hole locations
 			}
 		} while (!checkHoleCoords(x, y, holes, zombies));
 		Item hole = { HOLE, x, y };
@@ -264,7 +278,7 @@ bool checkHoleCoords(int x, int y, vector<Item> holes, vector<Item> zombies){
 }
 
 void placePills(char grid[][SIZEX], vector<Item> pills){
-	for (Item pill:pills){
+	for (Item pill : pills){
 		int x, y;
 		y = pill.y;
 		x = pill.x;
@@ -275,7 +289,7 @@ void placePills(char grid[][SIZEX], vector<Item> pills){
 }
 
 void generatePills(vector<Item> &pills, Item spot, vector<Item> holes, vector<Item> zombies){
-	bool checkPillCoords(int, int, vector<Item>, vector<Item>, vector<Item> );
+	bool checkPillCoords(int, int, vector<Item>, vector<Item>, vector<Item>);
 	Seed();
 	for (int count = 0; count < 6; count++){
 		int x, y;
@@ -310,15 +324,15 @@ bool checkPillCoords(int x, int y, vector<Item> pills, vector<Item> holes, vecto
 			isValid = false;
 		}
 	}
-	
+
 
 	return isValid;
 }
 
 void setSpotInitialCoordinates(Item& spot)
 { //set spot coordinates inside the grid at random at beginning of game
-	spot.y = SIZEY/ 2;      //vertical coordinate in range [1..(SIZEY - 2)]
-	spot.x = SIZEX/ 2;    //horizontal coordinate in range [1..(SIZEX - 2)]
+	spot.y = SIZEY / 2;      //vertical coordinate in range [1..(SIZEY - 2)]
+	spot.x = SIZEX / 2;    //horizontal coordinate in range [1..(SIZEX - 2)]
 } //end of setSpotInitialoordinates
 
 void setGrid(char grid[][SIZEX])
@@ -362,13 +376,13 @@ void updateGrid(char grid[][SIZEX], Item spot, vector<Item> &holes, vector<Item>
 	moveZombies(grid, zombies, spot, key);
 	placeZombies(grid, zombies);  //set zombies in grid
 	//must put spot in after holes!
-	
+
 } //end of updateGrid
 
 //---------------------------------------------------------------------------
 //----- move the spot
 //---------------------------------------------------------------------------
-void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, string& mess,int& lives)
+void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, string& mess, int& lives)
 { //move spot in required direction
 	void setKeyDirection(int k, int& dx, int& dy);
 
@@ -387,7 +401,7 @@ void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, string& mes
 		break;
 	case HOLE:
 		sp.y += dy;
-		sp.x += dx; 
+		sp.x += dx;
 		//a life would then be removed.
 		lives--;
 		break;
@@ -430,7 +444,7 @@ int getKeyPress()
 	keyPressed = getch();      //read in the selected arrow key or command letter
 	while (keyPressed == 224)     //ignore symbol following cursor key
 		keyPressed = getch();
-	return(keyPressed);   
+	return(keyPressed);
 } //end of getKeyPress
 
 bool isArrowKey(int key)
