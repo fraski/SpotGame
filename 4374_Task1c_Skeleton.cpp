@@ -7,6 +7,7 @@
 #include <conio.h>           //for getch()
 #include <string>            //for string
 #include <vector>
+#include <ctime>			//for outputting time
 using namespace std;
 
 //include our own libraries
@@ -34,7 +35,7 @@ const int  RIGHT(77);        //right arrow
 const int  LEFT(75);         //left arrow
 //defining the other command letters
 const char QUIT('Q');        //end the game
-
+const char PLAY('P');		//play the game
 //data structure to store data for a grid item
 struct Item{
 	const char symbol;	     //symbol on grid
@@ -44,19 +45,48 @@ struct Item{
 //---------------------------------------------------------------------------
 //----- run game
 //---------------------------------------------------------------------------
+//function declarations (prototypes)
+
+void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item> &holes, vector<Item> &pills, vector<Item> &zombies);
+bool isArrowKey(int k);
+void updateGame(char g[][SIZEX], Item& sp, int k, string& mess, vector<Item> &holes, vector<Item> &pills, int& lives, vector<Item> &zombies);
+void renderGame(const char g[][SIZEX], string mess);
+void endProgram();
+void gameEntry();
+int  getKeyPress();
+bool wantToQuit(int k);
+void enterGame();
 
 int main()
 {
-	//function declarations (prototypes)
-	void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item> &holes, vector<Item> &pills, vector<Item> &zombies);
-	bool wantToQuit(int k);
-	bool isArrowKey(int k);
-	int  getKeyPress();
-	void updateGame(char g[][SIZEX], Item& sp, int k, string& mess, vector<Item> &holes, vector<Item> &pills, int& lives, vector<Item> &zombies );
-	void renderGame(const char g[][SIZEX], string mess);
-	void endProgram();
+	//action...
+	gameEntry();
+	return 0;
+} //end main
 
-	//local variable declarations 
+
+void gameEntry() //first console screen
+{
+	bool wantToPlay(int k);
+	void displayTime();
+	cout << " SPOT   GROUP 1RR - Fraser Burns, Ellie Fuller, Roddy Munro \n";
+	displayTime();
+	cout << "Press 'P' to play game \n" << "Press 'Q' to quit";
+	int key(' ');
+	
+
+	while (!wantToQuit(key))
+	{
+		key = getKeyPress();
+		if (wantToPlay(key) == true)
+		{
+			enterGame();
+		}
+	}
+	endProgram();
+}
+void enterGame() //console screen where you play the game
+{   //local variable declarations 
 	char grid[SIZEY][SIZEX];                //grid for display
 	Item spot = { SPOT };                   //Spot's symbol and position (0, 0) 
 	int lives = 5;
@@ -66,8 +96,7 @@ int main()
 	vector<Item> holes;
 	vector<Item> pills;
 	vector<Item> zombies;
-	
-	//action...
+
 	initialiseGame(grid, spot, holes, pills, zombies);           //initialise grid (incl. walls and spot)
 	int key(' ');                         //create key to store keyboard events
 	do {
@@ -80,17 +109,26 @@ int main()
 			message = "INVALID KEY!        "; //set 'Invalid key' message
 		cout << lives;
 	} while (!wantToQuit(key) && lives > 0);               //while user does not want to quit
-	endProgram();                             //display final message
-	return 0;
-} //end main
+	endProgram(); //display final message
+}
 
-void updateGame(char grid[][SIZEX], Item& spot, int key, string& message, vector<Item> &holes, vector<Item> &pills ,int& lives, vector<Item> &zombies)
+void displayTime()
+{
+	time_t rawtime; //creates an object of the built in time function
+	srand((unsigned int)time(NULL));
+	struct tm * timeinfo;
+	time(&rawtime); //gets the time from the computer
+	timeinfo = localtime(&rawtime); //store that time here
+	//displays current date and time
+	cout << asctime(timeinfo) << endl;
+}
+void updateGame(char grid[][SIZEX], Item& spot, int key, string& message, vector<Item> &holes, vector<Item> &pills, int& lives, vector<Item> &zombies)
 { //updateGame state
 	void updateSpotCoordinates(const char g[][SIZEX], Item& spot, int key, string& mess, int& lives);
 	void updateGrid(char g[][SIZEX], Item spot, vector<Item> &holes, vector<Item> &pills, vector<Item> &zombies, int key);
 
-	updateSpotCoordinates(grid, spot, key, message,lives);    //update spot coordinates
-                                                        //according to key
+	updateSpotCoordinates(grid, spot, key, message, lives);    //update spot coordinates
+	//according to key
 	updateGrid(grid, spot, holes, pills, zombies, key);                             //update grid information
 }
 
@@ -98,7 +136,7 @@ void updateGame(char grid[][SIZEX], Item& spot, int key, string& message, vector
 //----- initialise game state
 //---------------------------------------------------------------------------
 
-void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item> &holes, vector<Item> &pills , vector<Item> &zombies)
+void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item> &holes, vector<Item> &pills, vector<Item> &zombies)
 { //initialise grid and place spot in middle
 	void setGrid(char[][SIZEX]);
 	void setSpotInitialCoordinates(Item& spot);
@@ -113,7 +151,7 @@ void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item> &holes, vector<
 
 	void generatePills(vector<Item> &pills, Item spot, vector<Item> holes, vector<Item> zombie);
 	void placePills(char gr[][SIZEX], vector<Item> pills);
-	
+
 
 	Seed();                            //seed random number generator
 	setSpotInitialCoordinates(spot);   //initialise spot position
@@ -135,7 +173,7 @@ void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item> &holes, vector<
 } //end of initialiseGame
 
 void placeZombies(char grid[][SIZEX], vector<Item> zombies){
-	for (Item zombie:zombies){
+	for (Item zombie : zombies){
 		int x, y;
 		//(zombies.at(count)).y;
 		y = zombie.y;
@@ -155,12 +193,12 @@ void generateZombies(vector<Item> &zombies){
 		int x, y;
 		switch (count)
 		{
-		case 0 :
+		case 0:
 			x = 1;
 			y = 1;
 
 			break;
-		case 1 :
+		case 1:
 			x = 1;
 			y = 10;
 			break;
@@ -186,13 +224,14 @@ void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key)
 	for (Item zombie : zombies)
 	{
 		if (zombie.x > spot.x){
-			zombie.x = zombie.x-1;
+			zombie.x = zombie.x - 1;
 			cout << "1";
 		}
 		else if (zombie.x < spot.x){
 			zombie.x++;
 			cout << "2";
-		}else if (zombie.y < spot.y){
+		}
+		else if (zombie.y < spot.y){
 			zombie.y++;
 			cout << "3";
 		}
@@ -205,19 +244,19 @@ void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key)
 		/*
 		switch (/*Zombies new position)
 		{		//...depending on what's on the target position in grid...
-			case HOLE:
-				//ERASE ZOMBIE
-				break;
-			case WALL:        
-				//GO OTHER DIRECTION??
-				break;
+		case HOLE:
+		//ERASE ZOMBIE
+		break;
+		case WALL:
+		//GO OTHER DIRECTION??
+		break;
 		}*/
 		count++;
 	}
 }
 
 void placeHoles(char grid[][SIZEX], vector<Item> holes){
-	for (Item hole:holes){
+	for (Item hole : holes){
 		int x, y;
 		y = hole.y;
 		x = hole.x;
@@ -230,16 +269,16 @@ void placeHoles(char grid[][SIZEX], vector<Item> holes){
 void generateHoles(vector<Item> &holes, Item spot, vector<Item> zombies){
 	bool checkHoleCoords(int, int, vector<Item>, vector<Item>);
 	Seed();
-	for (int count = 0;count < 12;count++){
+	for (int count = 0; count < 12; count++){
 		int x, y;
 		do{
 			while ((y = Random(SIZEY - 2)) == spot.y){
-			//will repeat while loop if the Random number generated
-			//is either the spots location, or other hole locations
+				//will repeat while loop if the Random number generated
+				//is either the spots location, or other hole locations
 			}
 			while ((x = Random(SIZEX - 2)) == spot.x){
-			//will repeat while loop if the Random number generated
-			//is either the spots location, or other hole locations
+				//will repeat while loop if the Random number generated
+				//is either the spots location, or other hole locations
 			}
 		} while (!checkHoleCoords(x, y, holes, zombies));
 		Item hole = { HOLE, x, y };
@@ -264,7 +303,7 @@ bool checkHoleCoords(int x, int y, vector<Item> holes, vector<Item> zombies){
 }
 
 void placePills(char grid[][SIZEX], vector<Item> pills){
-	for (Item pill:pills){
+	for (Item pill : pills){
 		int x, y;
 		y = pill.y;
 		x = pill.x;
@@ -275,7 +314,7 @@ void placePills(char grid[][SIZEX], vector<Item> pills){
 }
 
 void generatePills(vector<Item> &pills, Item spot, vector<Item> holes, vector<Item> zombies){
-	bool checkPillCoords(int, int, vector<Item>, vector<Item>, vector<Item> );
+	bool checkPillCoords(int, int, vector<Item>, vector<Item>, vector<Item>);
 	Seed();
 	for (int count = 0; count < 6; count++){
 		int x, y;
@@ -310,15 +349,15 @@ bool checkPillCoords(int x, int y, vector<Item> pills, vector<Item> holes, vecto
 			isValid = false;
 		}
 	}
-	
+
 
 	return isValid;
 }
 
 void setSpotInitialCoordinates(Item& spot)
 { //set spot coordinates inside the grid at random at beginning of game
-	spot.y = SIZEY/ 2;      //vertical coordinate in range [1..(SIZEY - 2)]
-	spot.x = SIZEX/ 2;    //horizontal coordinate in range [1..(SIZEX - 2)]
+	spot.y = SIZEY / 2;      //vertical coordinate in range [1..(SIZEY - 2)]
+	spot.x = SIZEX / 2;    //horizontal coordinate in range [1..(SIZEX - 2)]
 } //end of setSpotInitialoordinates
 
 void setGrid(char grid[][SIZEX])
@@ -362,13 +401,13 @@ void updateGrid(char grid[][SIZEX], Item spot, vector<Item> &holes, vector<Item>
 	moveZombies(grid, zombies, spot, key);
 	placeZombies(grid, zombies);  //set zombies in grid
 	//must put spot in after holes!
-	
+
 } //end of updateGrid
 
 //---------------------------------------------------------------------------
 //----- move the spot
 //---------------------------------------------------------------------------
-void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, string& mess,int& lives)
+void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, string& mess, int& lives)
 { //move spot in required direction
 	void setKeyDirection(int k, int& dx, int& dy);
 
@@ -387,7 +426,7 @@ void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, string& mes
 		break;
 	case HOLE:
 		sp.y += dy;
-		sp.x += dx; 
+		sp.x += dx;
 		//a life would then be removed.
 		lives--;
 		break;
@@ -430,7 +469,7 @@ int getKeyPress()
 	keyPressed = getch();      //read in the selected arrow key or command letter
 	while (keyPressed == 224)     //ignore symbol following cursor key
 		keyPressed = getch();
-	return(keyPressed);   
+	return(keyPressed);
 } //end of getKeyPress
 
 bool isArrowKey(int key)
@@ -442,6 +481,11 @@ bool wantToQuit(int key)
 { //check if the key pressed is 'Q'
 	return (key == QUIT);
 } //end of wantToQuit
+
+bool wantToPlay(int key)
+{ //check if key 'P' is pressed
+	return (key == PLAY);
+}
 
 
 //---------------------------------------------------------------------------
@@ -499,6 +543,7 @@ void showTitle()
 	SelectTextColour(clRed);
 	Gotoxy(40, 0);
 	cout << "Pascale Vacher: March 15";
+
 } //end of showTitle
 
 
