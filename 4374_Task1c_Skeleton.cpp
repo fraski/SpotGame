@@ -7,12 +7,14 @@
 #include <conio.h>           //for getch()
 #include <string>            //for string
 #include <vector>
-#include <ctime>			//for outputting time
+
 using namespace std;
 
 //include our own libraries
 #include "RandomUtils.h"     //for Seed, Random
 #include "ConsoleUtils.h"    //for Clrscr, Gotoxy, etc.
+#include <time.h>			//for outputting time
+#include <stdio.h>			//for outputting time
 
 //---------------------------------
 //define constants
@@ -56,6 +58,8 @@ void gameEntry();
 int  getKeyPress();
 bool wantToQuit(int k);
 void enterGame();
+const string displayTime();
+
 
 int main()
 {
@@ -68,14 +72,12 @@ int main()
 void gameEntry() //first console screen
 {
 	bool wantToPlay(int k);
-	void displayTime();
 	cout << " SPOT   GROUP 1RR - Fraser Burns, Ellie Fuller, Roddy Munro \n";
-	displayTime();
+	cout << "date/time: " << displayTime() << endl;
 	cout << "Press 'P' to play game \n" << "Press 'Q' to quit";
 	int key(' ');
-	
 
-	while (!wantToQuit(key))
+	while (wantToQuit(key) == false)
 	{
 		key = getKeyPress();
 		if (wantToPlay(key) == true)
@@ -85,6 +87,7 @@ void gameEntry() //first console screen
 	}
 	endProgram();
 }
+
 void enterGame() //console screen where you play the game
 {   //local variable declarations 
 	char grid[SIZEY][SIZEX];                //grid for display
@@ -112,16 +115,16 @@ void enterGame() //console screen where you play the game
 	endProgram(); //display final message
 }
 
-void displayTime()
+const string displayTime()
 {
-	time_t rawtime; //creates an object of the built in time function
-	srand((unsigned int)time(NULL));
-	struct tm * timeinfo;
-	time(&rawtime); //gets the time from the computer
-	timeinfo = localtime(&rawtime); //store that time here
-	//displays current date and time
-	cout << asctime(timeinfo) << endl;
+	time_t     now = time(0);
+	struct tm  tstruct;
+	char       buf[80];
+	tstruct = *localtime(&now);
+	strftime(buf, sizeof(buf), "%d-%m-%Y.%X", &tstruct);
+	return buf;
 }
+
 void updateGame(char grid[][SIZEX], Item& spot, int key, string& message, vector<Item> &holes, vector<Item> &pills, int& lives, vector<Item> &zombies)
 { //updateGame state
 	void updateSpotCoordinates(const char g[][SIZEX], Item& spot, int key, string& mess, int& lives);
