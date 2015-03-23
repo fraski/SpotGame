@@ -38,6 +38,8 @@ const int  LEFT(75);         //left arrow
 //defining the other command letters
 const char QUIT('Q');        //end the game
 const char PLAY('P');		//play the game
+//defining the cheats
+const char FREEZE('F');		//freeze game
 //data structure to store data for a grid item
 struct Item{
 	const char symbol;	     //symbol on grid
@@ -51,12 +53,13 @@ struct Item{
 
 void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item> &holes, vector<Item> &pills, vector<Item> &zombies);
 bool isArrowKey(int k);
-void updateGame(char g[][SIZEX], Item& sp, int k, string& mess, vector<Item> &holes, vector<Item> &pills, int& lives, vector<Item> &zombies);
+void updateGame(char g[][SIZEX], Item& sp, int k, string& mess, vector<Item> &holes, vector<Item> &pills, int& lives, vector<Item> &zombies, bool zombiesFrozen);
 void renderGame(const char g[][SIZEX], string mess);
 void endProgram();
 void gameEntry();
 int  getKeyPress();
 bool wantToQuit(int k);
+bool wantToFreeze(int f);
 void enterGame();
 const string displayTime();
 
@@ -102,12 +105,15 @@ void enterGame() //console screen where you play the game
 
 	initialiseGame(grid, spot, holes, pills, zombies);           //initialise grid (incl. walls and spot)
 	int key(' ');                         //create key to store keyboard events
+	bool zombiesFrozen = FALSE;
 	do {
 		renderGame(grid, message);        //render game state on screen
 		message = "                    "; //reset message
 		key = getKeyPress();              //read in next keyboard event
 		if (isArrowKey(key))
-			updateGame(grid, spot, key, message, holes, pills, lives, zombies);
+			updateGame(grid, spot, key, message, holes, pills, lives, zombies, zombiesFrozen);
+		else if (wantToFreeze(key))
+			zombiesFrozen == TRUE;
 		else
 			message = "INVALID KEY!        "; //set 'Invalid key' message
 		cout << lives;
@@ -125,14 +131,14 @@ const string displayTime()
 	return buf;
 }
 
-void updateGame(char grid[][SIZEX], Item& spot, int key, string& message, vector<Item> &holes, vector<Item> &pills, int& lives, vector<Item> &zombies)
+void updateGame(char grid[][SIZEX], Item& spot, int key, string& message, vector<Item> &holes, vector<Item> &pills, int& lives, vector<Item> &zombies, bool zombiesFrozen)
 { //updateGame state
 	void updateSpotCoordinates(const char g[][SIZEX], Item& spot, int key, string& mess, int& lives);
-	void updateGrid(char g[][SIZEX], Item spot, vector<Item> &holes, vector<Item> &pills, vector<Item> &zombies, int key);
+	void updateGrid(char g[][SIZEX], Item spot, vector<Item> &holes, vector<Item> &pills, vector<Item> &zombies, int key, bool zombiesFrozen);
 
 	updateSpotCoordinates(grid, spot, key, message, lives);    //update spot coordinates
 	//according to key
-	updateGrid(grid, spot, holes, pills, zombies, key);                             //update grid information
+	updateGrid(grid, spot, holes, pills, zombies, key, zombiesFrozen);                             //update grid information
 }
 
 //---------------------------------------------------------------------------
@@ -298,7 +304,7 @@ bool checkHoleCoords(int x, int y, vector<Item> holes, vector<Item> zombies){
 		}
 	}
 	for (int count = 0; count < zombies.size(); count++){
-		if (zombies.at(count).x == x && zombies.at(count).x == y){
+		if (zombies.at(count).x == x && zombies.at(count).y == y){
 			isValid = false;
 		}
 	}
@@ -343,7 +349,7 @@ bool checkPillCoords(int x, int y, vector<Item> pills, vector<Item> holes, vecto
 		}
 	}
 	for (int count = 0; count < zombies.size(); count++){
-		if (zombies.at(count).x == x && zombies.at(count).x == y){
+		if (zombies.at(count).x == x && zombies.at(count).y == y){
 			isValid = false;
 		}
 	}
@@ -389,7 +395,7 @@ void placeSpot(char gr[][SIZEX], Item spot)
 //----- update grid state
 //---------------------------------------------------------------------------
 
-void updateGrid(char grid[][SIZEX], Item spot, vector<Item> &holes, vector<Item> &pills, vector<Item> &zombies, int key)
+void updateGrid(char grid[][SIZEX], Item spot, vector<Item> &holes, vector<Item> &pills, vector<Item> &zombies, int key, bool zombiesFrozen)
 { //update grid configuration after each move
 	void setGrid(char[][SIZEX]);
 	void placeSpot(char g[][SIZEX], Item spot);
@@ -397,11 +403,14 @@ void updateGrid(char grid[][SIZEX], Item spot, vector<Item> &holes, vector<Item>
 	void placePills(char[][SIZEX], vector<Item> pills);
 	void placeZombies(char[][SIZEX], vector<Item> zombies);
 	void moveZombies(char[][SIZEX], vector<Item> &zombies, Item spot, int key);
+
 	setGrid(grid);	         //reset empty grid
 	placeHoles(grid, holes); //set holes in grid
 	placeSpot(grid, spot);	 //set spot in grid
 	placePills(grid, pills); //set pills in grid
-	moveZombies(grid, zombies, spot, key);
+	if (zombiesFrozen == FALSE){
+		moveZombies(grid, zombies, spot, key);
+	}
 	placeZombies(grid, zombies);  //set zombies in grid
 	//must put spot in after holes!
 
@@ -488,6 +497,11 @@ bool wantToQuit(int key)
 bool wantToPlay(int key)
 { //check if key 'P' is pressed
 	return (key == PLAY);
+}
+
+bool wantToFreeze(int key)
+{
+	return (key == FREEZE);
 }
 
 
