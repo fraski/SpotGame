@@ -44,6 +44,7 @@ const char FREEZE('F');		//freeze game
 struct Item{
 	const char symbol;	     //symbol on grid
 	int x, y;			     //coordinates
+	bool destroyed;
 };
 
 //---------------------------------------------------------------------------
@@ -75,6 +76,7 @@ int main()
 void gameEntry() //first console screen
 {
 	bool wantToPlay(int k);
+	//display these somewhere else
 	cout << " SPOT   GROUP 1RR - Fraser Burns, Ellie Fuller, Roddy Munro \n";
 	cout << "date/time: " << displayTime() << endl;
 	cout << "Press 'P' to play game \n" << "Press 'Q' to quit";
@@ -85,7 +87,8 @@ void gameEntry() //first console screen
 		key = getKeyPress();
 		if (wantToPlay(key) == true)
 		{
-			enterGame();
+			system("CLS"); // change this
+			enterGame(); // pass key into this by reference
 		}
 	}
 	endProgram();
@@ -113,9 +116,11 @@ void enterGame() //console screen where you play the game
 		if (isArrowKey(key))
 			updateGame(grid, spot, key, message, holes, pills, lives, zombies, zombiesFrozen);
 		else if (wantToFreeze(key))
-			zombiesFrozen == TRUE;
+			zombiesFrozen = TRUE;
 		else
 			message = "INVALID KEY!        "; //set 'Invalid key' message
+		
+		
 		cout << lives;
 	} while (!wantToQuit(key) && lives > 0);               //while user does not want to quit
 	endProgram(); //display final message
@@ -134,11 +139,11 @@ const string displayTime()
 void updateGame(char grid[][SIZEX], Item& spot, int key, string& message, vector<Item> &holes, vector<Item> &pills, int& lives, vector<Item> &zombies, bool zombiesFrozen)
 { //updateGame state
 	void updateSpotCoordinates(const char g[][SIZEX], Item& spot, int key, string& mess, int& lives);
-	void updateGrid(char g[][SIZEX], Item spot, vector<Item> &holes, vector<Item> &pills, vector<Item> &zombies, int key, bool zombiesFrozen);
+	void updateGrid(char g[][SIZEX], Item spot, vector<Item> &holes, vector<Item> &pills, vector<Item> &zombies, int key, bool zombiesFrozen,int &lives);
 
 	updateSpotCoordinates(grid, spot, key, message, lives);    //update spot coordinates
 	//according to key
-	updateGrid(grid, spot, holes, pills, zombies, key, zombiesFrozen);                             //update grid information
+	updateGrid(grid, spot, holes, pills, zombies, key, zombiesFrozen, lives);                             //update grid information
 }
 
 //---------------------------------------------------------------------------
@@ -183,11 +188,12 @@ void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item> &holes, vector<
 
 void placeZombies(char grid[][SIZEX], vector<Item> zombies){
 	for (Item zombie : zombies){
-		int x, y;
-		//(zombies.at(count)).y;
-		y = zombie.y;
-		x = zombie.x;
-		grid[y][x] = ZOMBIE;
+		if (zombie.destroyed == false){
+			int x, y;
+			y = zombie.y;
+			x = zombie.x;
+			grid[y][x] = ZOMBIE;
+		}
 	}
 
 }
@@ -220,46 +226,102 @@ void generateZombies(vector<Item> &zombies){
 			y = 10;
 			break;
 		}
-		Item zombie = { ZOMBIE, x, y };
+		Item zombie = { ZOMBIE, x, y};
 		zombies.push_back(zombie);
 	}
 }
 
-void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key)
+void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key,int &lives)
 {
 	//this procedure is VERY FLAWED - only 1 zombie moves, and this is in relation to what arrow is pressed. zombie also can go through walls and holes, etc
 	//attempted to change it, got all 4 moving, but they are WAY too smart. I think we should add some kind of random element in it
 	int count = 0;
 	for (Item zombie : zombies)
 	{
-		if (zombie.x > spot.x){
-			zombie.x = zombie.x - 1;
-			cout << "1";
+		if (zombie.destroyed == false){
+			int random = Random(3);
+			int move;
+			int origX = zombie.x;
+			int origY = zombie.y;
+			if (zombie.x >= spot.x && zombie.y >= spot.y){
+				switch (random){
+					case 1:
+						zombie.x--;
+						break;
+					case 2:
+						zombie.x--;
+						zombie.y--;
+						break;
+					case 3:
+						zombie.y--;
+						break;		
+				}
+			}
+			else if (zombie.x <= spot.x && zombie.y >= spot.y){
+				switch (random){
+				case 1:
+					zombie.x++;
+					break;
+				case 2:
+					zombie.x++;
+					zombie.y--;
+					break;
+				case 3:
+					zombie.y--;
+					break;
+				}
+
+			}
+			else if (zombie.x >= spot.x && zombie.y <= spot.y){
+				switch (random){
+				case 1:
+					zombie.x--;
+					break;
+				case 2:
+					zombie.x--;
+					zombie.y++;
+					break;
+				case 3:
+					zombie.y++;
+					break;
+				}
+			}
+			else if (zombie.x <= spot.x && zombie.y <= spot.y){
+				switch (random){
+				case 1:
+					zombie.x++;
+					break;
+				case 2:
+					zombie.x++;
+					zombie.y++;
+					break;
+				case 3:
+					zombie.y++;
+					break;
+				}
+			}
+			/*
+			zombies.at(count).x = zombie.x;
+			zombies.at(count).y = zombie.y;
+			*/
+			switch (grid[zombie.y][zombie.x])
+			{		//...depending on what's on the target position in grid...
+			case HOLE:
+				zombies.at(count).destroyed = true;
+				break;
+			case WALL:
+				zombie.x = origX;
+				zombie.y = origY;
+				break;
+			case SPOT:
+				lives--;
+				zombie.x = origX;
+				zombie.y = origY;
+				break;
+			}
+			zombies.at(count).x = zombie.x;
+			zombies.at(count).y = zombie.y;
 		}
-		else if (zombie.x < spot.x){
-			zombie.x++;
-			cout << "2";
-		}
-		else if (zombie.y < spot.y){
-			zombie.y++;
-			cout << "3";
-		}
-		else if (zombie.y > spot.y){
-			cout << "4";
-			zombie.y--;
-		}
-		zombies.at(count).x = zombie.x;
-		zombies.at(count).y = zombie.y;
-		/*
-		switch (/*Zombies new position)
-		{		//...depending on what's on the target position in grid...
-		case HOLE:
-		//ERASE ZOMBIE
-		break;
-		case WALL:
-		//GO OTHER DIRECTION??
-		break;
-		}*/
 		count++;
 	}
 }
@@ -395,21 +457,21 @@ void placeSpot(char gr[][SIZEX], Item spot)
 //----- update grid state
 //---------------------------------------------------------------------------
 
-void updateGrid(char grid[][SIZEX], Item spot, vector<Item> &holes, vector<Item> &pills, vector<Item> &zombies, int key, bool zombiesFrozen)
+void updateGrid(char grid[][SIZEX], Item spot, vector<Item> &holes, vector<Item> &pills, vector<Item> &zombies, int key, bool zombiesFrozen,int& lives)
 { //update grid configuration after each move
 	void setGrid(char[][SIZEX]);
 	void placeSpot(char g[][SIZEX], Item spot);
 	void placeHoles(char[][SIZEX], vector<Item> holes);
 	void placePills(char[][SIZEX], vector<Item> pills);
 	void placeZombies(char[][SIZEX], vector<Item> zombies);
-	void moveZombies(char[][SIZEX], vector<Item> &zombies, Item spot, int key);
+	void moveZombies(char[][SIZEX], vector<Item> &zombies, Item spot, int key,int& lives);
 
 	setGrid(grid);	         //reset empty grid
 	placeHoles(grid, holes); //set holes in grid
 	placeSpot(grid, spot);	 //set spot in grid
 	placePills(grid, pills); //set pills in grid
 	if (zombiesFrozen == FALSE){
-		moveZombies(grid, zombies, spot, key);
+		moveZombies(grid, zombies, spot, key,lives);
 	}
 	placeZombies(grid, zombies);  //set zombies in grid
 	//must put spot in after holes!
@@ -592,3 +654,4 @@ void endProgram()
 	Gotoxy(40, 9);
 	system("pause");
 } //end of endProgram
+
