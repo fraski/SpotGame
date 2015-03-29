@@ -40,6 +40,7 @@ const char QUIT('Q');        //end the game
 const char PLAY('P');		//play the game
 //defining the cheats
 const char FREEZE('F');		//freeze game
+const char EXTERMINATE('X');	//exterminate remaining zombies
 //data structure to store data for a grid item
 struct Item{
 	const char symbol;	     //symbol on grid
@@ -54,13 +55,14 @@ struct Item{
 
 void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item> &holes, vector<Item> &pills, vector<Item> &zombies);
 bool isArrowKey(int k);
-void updateGame(char g[][SIZEX], Item& sp, int k, string& mess, vector<Item> &holes, vector<Item> &pills, int& lives, vector<Item> &zombies, bool zombiesFrozen);
+void updateGame(char g[][SIZEX], Item& sp, int k, string& mess, vector<Item> &holes, vector<Item> &pills, int& lives, vector<Item> &zombies, bool zombiesFrozen, bool zombiesExterminated, bool exterminatedAgain);
 void renderGame(const char g[][SIZEX], string mess);
 void endProgram();
 void gameEntry();
 int  getKeyPress();
 bool wantToQuit(int k);
 bool wantToFreeze(int f);
+bool wantToExterminate(int x);
 void enterGame();
 const string displayTime();
 
@@ -77,7 +79,7 @@ void gameEntry() //first console screen
 {
 	bool wantToPlay(int k);
 	//display these somewhere else
-	cout << " SPOT   GROUP 1RR - Fraser Burns, Ellie Fuller, Roddy Munro \n";
+	cout << " SPOT   GROUP 1RR - Roddy Munro, Fraser Burns, Ellie Fuller\n";
 	cout << "date/time: " << displayTime() << endl;
 	cout << "Press 'P' to play game \n" << "Press 'Q' to quit";
 	int key(' ');
@@ -98,7 +100,7 @@ void enterGame() //console screen where you play the game
 {   //local variable declarations 
 	char grid[SIZEY][SIZEX];                //grid for display
 	Item spot = { SPOT };                   //Spot's symbol and position (0, 0) 
-	int lives = 5;
+	int lives = 5, zombiesFreezeCount = 1, zombiesExterminateCount = 1;
 	string message("LET'S START...      "); //current message to player
 	//int holes[12][2]; //holds x and y for each hole
 	//not sure how to do this without this weird work around..
@@ -108,15 +110,29 @@ void enterGame() //console screen where you play the game
 
 	initialiseGame(grid, spot, holes, pills, zombies);           //initialise grid (incl. walls and spot)
 	int key(' ');                         //create key to store keyboard events
-	bool zombiesFrozen = FALSE;
+	bool zombiesFrozen = FALSE, zombiesExterminated = FALSE, exterminatedAgain = FALSE;;
 	do {
 		renderGame(grid, message);        //render game state on screen
 		message = "                    "; //reset message
 		key = getKeyPress();              //read in next keyboard event
 		if (isArrowKey(key))
-			updateGame(grid, spot, key, message, holes, pills, lives, zombies, zombiesFrozen);
+			updateGame(grid, spot, key, message, holes, pills, lives, zombies, zombiesFrozen, zombiesExterminated, exterminatedAgain);
 		else if (wantToFreeze(key))
-			zombiesFrozen = TRUE;
+		{
+			zombiesFreezeCount++;
+			if ((zombiesFreezeCount % 2) == 0)
+				zombiesFrozen = TRUE;
+			else
+				zombiesFrozen = FALSE;
+		}
+		else if (wantToExterminate(key))
+		{
+			zombiesExterminateCount++;
+			if ((zombiesExterminateCount % 2) == 0)
+				zombiesExterminated = TRUE;
+			else
+				zombiesExterminated = FALSE;
+		}
 		else
 			message = "INVALID KEY!        "; //set 'Invalid key' message
 		
@@ -136,14 +152,14 @@ const string displayTime()
 	return buf;
 }
 
-void updateGame(char grid[][SIZEX], Item& spot, int key, string& message, vector<Item> &holes, vector<Item> &pills, int& lives, vector<Item> &zombies, bool zombiesFrozen)
+void updateGame(char grid[][SIZEX], Item& spot, int key, string& message, vector<Item> &holes, vector<Item> &pills, int& lives, vector<Item> &zombies, bool zombiesFrozen, bool zombiesExterminated, bool exterminatedAgain)
 { //updateGame state
-	void updateSpotCoordinates(const char g[][SIZEX], Item& spot, int key, string& mess, int& lives);
-	void updateGrid(char g[][SIZEX], Item spot, vector<Item> &holes, vector<Item> &pills, vector<Item> &zombies, int key, bool zombiesFrozen,int &lives);
+	void updateSpotCoordinates(const char g[][SIZEX], Item& spot, int key, string& mess, int& lives, vector<Item>& pills);
+	void updateGrid(char g[][SIZEX], Item spot, vector<Item> &holes, vector<Item> &pills, vector<Item> &zombies, int key, bool zombiesFrozen,int &lives, bool zombiesExterminated, bool exterminatedAgain);
 
-	updateSpotCoordinates(grid, spot, key, message, lives);    //update spot coordinates
+	updateSpotCoordinates(grid, spot, key, message, lives, pills);    //update spot coordinates
 	//according to key
-	updateGrid(grid, spot, holes, pills, zombies, key, zombiesFrozen, lives);                             //update grid information
+	updateGrid(grid, spot, holes, pills, zombies, key, zombiesFrozen, lives, zombiesExterminated, exterminatedAgain);                             //update grid information
 }
 
 //---------------------------------------------------------------------------
@@ -457,7 +473,7 @@ void placeSpot(char gr[][SIZEX], Item spot)
 //----- update grid state
 //---------------------------------------------------------------------------
 
-void updateGrid(char grid[][SIZEX], Item spot, vector<Item> &holes, vector<Item> &pills, vector<Item> &zombies, int key, bool zombiesFrozen,int& lives)
+void updateGrid(char grid[][SIZEX], Item spot, vector<Item> &holes, vector<Item> &pills, vector<Item> &zombies, int key, bool zombiesFrozen,int& lives, bool zombiesExterminated, bool exterminatedAgain)
 { //update grid configuration after each move
 	void setGrid(char[][SIZEX]);
 	void placeSpot(char g[][SIZEX], Item spot);
@@ -473,6 +489,21 @@ void updateGrid(char grid[][SIZEX], Item spot, vector<Item> &holes, vector<Item>
 	if (zombiesFrozen == FALSE){
 		moveZombies(grid, zombies, spot, key,lives);
 	}
+	if (zombiesExterminated == TRUE){
+		zombies.at(0).destroyed = true;
+		zombies.at(1).destroyed = true;
+		zombies.at(2).destroyed = true;
+		zombies.at(3).destroyed = true;
+		exterminatedAgain = TRUE;
+	}
+
+	//can't seem to get zombies back in their corners after they've been exterminated with the 'X' key, probably my logic is wrong below
+	if ((zombiesExterminated == FALSE) && (exterminatedAgain == TRUE))
+	{
+		placeZombies(grid, zombies);
+		exterminatedAgain = FALSE;
+	}
+
 	placeZombies(grid, zombies);  //set zombies in grid
 	//must put spot in after holes!
 
@@ -481,7 +512,7 @@ void updateGrid(char grid[][SIZEX], Item spot, vector<Item> &holes, vector<Item>
 //---------------------------------------------------------------------------
 //----- move the spot
 //---------------------------------------------------------------------------
-void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, string& mess, int& lives)
+void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, string& mess, int& lives, vector<Item> &pills)
 { //move spot in required direction
 	void setKeyDirection(int k, int& dx, int& dy);
 
@@ -507,6 +538,10 @@ void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, string& mes
 	case WALL:        //hit a wall and stay there
 		cout << '\a'; //beep the alarm
 		mess = "CANNOT GO THERE!    ";
+		break;
+	case PILL:
+		//pills.at(count).destroyed = true;
+		//above statement doesnt work at all, tried to use the same stuff as used when a zombie hits a hole
 		break;
 	}
 } //end of updateSpotCoordinates
@@ -564,6 +599,11 @@ bool wantToPlay(int key)
 bool wantToFreeze(int key)
 {
 	return (key == FREEZE);
+}
+
+bool wantToExterminate(int key)
+{
+	return (key == EXTERMINATE);
 }
 
 
