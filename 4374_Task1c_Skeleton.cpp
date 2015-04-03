@@ -79,7 +79,7 @@ void gameEntry() //first console screen
 {
 	bool wantToPlay(int k);
 	//display these somewhere else
-	cout << " SPOT   GROUP 1RR - Roddy Munro, Fraser Burns, Ellie Fuller\n";
+	cout << " SPOT   GROUP 1RR - Fraser Burns, Ellie Fuller, Roddy Munro\n";
 	cout << "date/time: " << displayTime() << endl;
 	cout << "Press 'P' to play game \n" << "Press 'Q' to quit";
 	int key(' ');
