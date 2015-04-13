@@ -41,6 +41,7 @@ const char PLAY('P');		//play the game
 //defining the cheats
 const char FREEZE('F');		//freeze game
 const char EXTERMINATE('X');	//exterminate remaining zombies
+const char EAT('E');		//eat all remaining pills
 //data structure to store data for a grid item
 struct Item{
 	const char symbol;	     //symbol on grid
@@ -62,6 +63,7 @@ void gameEntry();
 int  getKeyPress();
 bool wantToQuit(int k);
 bool wantToFreeze(int f);
+bool wantToEat(int e);
 bool wantToExterminateZombies(int x);
 void enterGame();
 const string displayTime();
@@ -133,6 +135,11 @@ void enterGame() //console screen where you play the game
 			else
 				wantToExterminate = FALSE;
 			updateGame(grid, spot, key, message, holes, pills, lives, zombies, zombiesFrozen, wantToExterminate, exterminated);
+		}
+		else if (wantToEat(key))
+		{
+			for (int count = 0; count < 8; count++)
+				pills.at(count).destroyed = true;
 		}
 		else
 			message = "INVALID KEY!        "; //set 'Invalid key' message
@@ -741,6 +748,10 @@ bool wantToExterminateZombies(int key)
 	return (key == EXTERMINATE);
 }
 
+bool wantToEat(int key)
+{
+	return (key == EAT);
+}
 
 //---------------------------------------------------------------------------
 //----- display info on screen
