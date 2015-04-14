@@ -7,6 +7,7 @@
 #include <conio.h>           //for getch()
 #include <string>            //for string
 #include <vector>
+#include <fstream>			//for files
 
 using namespace std;
 
@@ -57,7 +58,7 @@ struct Item{
 void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item> &holes, vector<Item> &pills, vector<Item> &zombies);
 bool isArrowKey(int k);
 void updateGame(char g[][SIZEX], Item& sp, int k, string& mess, vector<Item> &holes, vector<Item> &pills, int& lives, vector<Item> &zombies, bool zombiesFrozen, bool wantToExterminate, bool &exterminated);
-void renderGame(const char g[][SIZEX], string mess);
+void renderGame(const char g[][SIZEX], string mess, string playerName);
 void endProgram();
 void gameEntry();
 int  getKeyPress();
@@ -65,7 +66,7 @@ bool wantToQuit(int k);
 bool wantToFreeze(int f);
 bool wantToEat(int e);
 bool wantToExterminateZombies(int x);
-void enterGame();
+void enterGame(string playerName);
 const string displayTime();
 
 
@@ -79,12 +80,15 @@ int main()
 
 void gameEntry() //first console screen
 {
+	
 	bool wantToPlay(int k);
+	bool checkForSpaces(string playerName);
 	//display these somewhere else
 	cout << " SPOT   GROUP 1RR - Fraser Burns, Ellie Fuller, Roddy Munro\n";
 	cout << "date/time: " << displayTime() << endl;
 	cout << "Press 'P' to play game \n" << "Press 'Q' to quit";
 	int key(' ');
+	string playerName;
 
 	while (wantToQuit(key) == false && wantToPlay(key)==false)
 	{
@@ -92,13 +96,32 @@ void gameEntry() //first console screen
 		if (wantToPlay(key) == true)
 		{
 			system("CLS"); // change this
-			enterGame(); // pass key into this by reference
+			do {
+				cout << "Enter player name (20 characters max): ";
+				cin >> playerName;
+			} while ((playerName.length() > 20) || (checkForSpaces(playerName) == true));
+			system("CLS");
+			enterGame(playerName); // pass key into this by reference
 		}
 	}
 	endProgram();
 }
 
-void enterGame() //console screen where you play the game
+//this function doesnt do anything useful
+bool checkForSpaces(string playerName)
+{
+	bool spacesPresent = false;
+	
+	for (int count = 0; count < playerName.length(); count++)
+	{
+		if (playerName[count] == ' '){
+			spacesPresent = true;
+		}
+	}
+	return spacesPresent;
+}
+
+void enterGame(string playerName) //console screen where you play the game
 {   //local variable declarations 
 	char grid[SIZEY][SIZEX];                //grid for display
 	Item spot = { SPOT };                   //Spot's symbol and position (0, 0) 
@@ -114,7 +137,7 @@ void enterGame() //console screen where you play the game
 	int key(' ');                         //create key to store keyboard events
 	bool zombiesFrozen = FALSE, wantToExterminate = FALSE, exterminated = FALSE;;
 	do {
-		renderGame(grid, message);        //render game state on screen
+		renderGame(grid, message, playerName);        //render game state on screen
 		message = "                    "; //reset message
 		key = getKeyPress();              //read in next keyboard event
 		if (isArrowKey(key))
@@ -140,6 +163,7 @@ void enterGame() //console screen where you play the game
 		{
 			for (int count = 0; count < 8; count++)
 				pills.at(count).destroyed = true;
+			updateGame(grid, spot, key, message, holes, pills, lives, zombies, zombiesFrozen, wantToExterminate, exterminated);
 		}
 		else
 			message = "INVALID KEY!        "; //set 'Invalid key' message
@@ -766,10 +790,10 @@ void clearMessage()
 
 } //end of setMessage
 
-void renderGame(const char gd[][SIZEX], string mess)
+void renderGame(const char gd[][SIZEX], string mess, string playerName)
 { //display game title, messages, maze, spot and apples on screen
 	void paintGrid(const char g[][SIZEX]);
-	void showTitle();
+	void showTitle(string);
 	void showOptions();
 	void showMessage(string);
 
@@ -777,7 +801,7 @@ void renderGame(const char gd[][SIZEX], string mess)
 	//display grid contents
 	paintGrid(gd);
 	//display game title
-	showTitle();
+	showTitle(playerName);
 	//display menu options available
 	showOptions();
 	//display message if any
@@ -799,15 +823,16 @@ void paintGrid(const char g[][SIZEX])
 	} //end of row-loop
 } //end of paintGrid
 
-void showTitle()
+void showTitle(string playerName)
 { //display game title
+	ofstream fout;
 	SelectTextColour(clYellow);
 	Gotoxy(0, 0);
 	cout << "___ZOMBIES GAME SKELETON___\n" << endl;
 	SelectBackColour(clWhite);
 	SelectTextColour(clRed);
 	Gotoxy(40, 0);
-	cout << "Fraser Burns, Ellie Fuller, Roddy Munro" << endl;
+	cout << playerName << "'s high score is: " << endl;
 	Gotoxy(40, 1);
 	cout << displayTime();
 
@@ -843,4 +868,3 @@ void endProgram()
 	//cin.clear();
 	system("pause");
 } //end of endProgram
-
