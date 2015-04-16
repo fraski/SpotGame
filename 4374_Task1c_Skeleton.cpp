@@ -80,7 +80,6 @@ int main()
 
 void gameEntry() //first console screen
 {
-	
 	bool wantToPlay(int k);
 	bool checkForSpaces(string playerName);
 	//display these somewhere else
@@ -105,6 +104,15 @@ void gameEntry() //first console screen
 		}
 	}
 	endProgram();
+}
+
+void doScoreStuff(string playerName, int lives)
+{
+	if (!ifstream(playerName+".scr"))
+	{
+		ofstream file(playerName + ".scr");
+		file << lives;
+	}
 }
 
 //this function doesnt do anything useful
@@ -132,6 +140,8 @@ void enterGame(string playerName) //console screen where you play the game
 	vector<Item> holes;
 	vector<Item> pills;
 	vector<Item> zombies;
+
+	void doScoreStuff(string, int);
 
 	initialiseGame(grid, spot, holes, pills, zombies);           //initialise grid (incl. walls and spot)
 	int key(' ');                         //create key to store keyboard events
@@ -171,6 +181,7 @@ void enterGame(string playerName) //console screen where you play the game
 		
 		cout << lives;
 	} while (!wantToQuit(key) && lives > 0);               //while user does not want to quit
+	doScoreStuff(playerName, lives);
 	//endProgram(); //display final message
 }
 
@@ -825,19 +836,33 @@ void paintGrid(const char g[][SIZEX])
 
 void showTitle(string playerName)
 { //display game title
-	ofstream fout;
+	int getHighScore(string playerName);
 	SelectTextColour(clYellow);
 	Gotoxy(0, 0);
 	cout << "___ZOMBIES GAME SKELETON___\n" << endl;
 	SelectBackColour(clWhite);
 	SelectTextColour(clRed);
 	Gotoxy(40, 0);
-	cout << playerName << "'s high score is: " << endl;
+	cout << playerName << "'s high score is: " << getHighScore(playerName);
 	Gotoxy(40, 1);
 	cout << displayTime();
 
 } //end of showTitle
 
+int getHighScore(string playerName)
+{
+	ifstream file(playerName + ".scr");
+	if (!file)
+	{
+		return -1;
+	}
+	else
+	{
+		string sScore;
+		getline(file, sScore);
+		return stoi(sScore);
+	}
+}
 
 void showOptions()
 { //show game options
