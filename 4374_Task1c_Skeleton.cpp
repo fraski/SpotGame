@@ -61,6 +61,7 @@ bool isArrowKey(int k);
 void updateGame(char g[][SIZEX], Item& sp, int k, string& mess, vector<Item> &holes, vector<Item> &pills, int& lives, vector<Item> &zombies, bool zombiesFrozen, bool wantToExterminate, bool &exterminated);
 void renderGame(const char g[][SIZEX], string mess, string playerName);
 void endProgram();
+void gameOver();
 void gameEntry();
 void infoScreen();
 int  getKeyPress();
@@ -74,6 +75,7 @@ const string s = "You are playing SPOT!\n\nSpot is a game where you (spot) have 
 //int getBufferSize(int BUFFER_SIZE);
 int main()
 {
+	
 	//action...
 	gameEntry();
 	return 0;
@@ -111,7 +113,7 @@ void gameEntry() //first console screen
 			enterGame(playerName); // pass key into this by reference
 		}
 	}
-	endProgram();
+	
 }
 
 void infoScreen()
@@ -192,7 +194,7 @@ void enterGame(string playerName) //console screen where you play the game
 {   //local variable declarations 
 	char grid[SIZEY][SIZEX];                //grid for display
 	Item spot = { SPOT };                   //Spot's symbol and position (0, 0) 
-	int lives = 500, zombiesFreezeCount = 1, zombiesExterminateCount = 1;
+	int lives = 5, zombiesFreezeCount = 1, zombiesExterminateCount = 1;
 	string message("LET'S START...      "); //current message to player
 	//int holes[12][2]; //holds x and y for each hole
 	//not sure how to do this without this weird work around..
@@ -241,6 +243,14 @@ void enterGame(string playerName) //console screen where you play the game
 		cout << lives;
 	} while (!wantToQuit(key) && lives > 0);               //while user does not want to quit
 	doScoreStuff(playerName, lives);
+	if (lives <= 0)
+	{
+		gameOver();
+	}
+	else
+	{
+		endProgram();
+	}
 	//endProgram(); //display final message
 }
 
@@ -953,6 +963,18 @@ void endProgram()
 	SelectTextColour(clYellow);
 	Gotoxy(40, 8);
 	cout << "PLAYER QUITS!          ";
+	//hold output screen until a keyboard key is hit
+	Gotoxy(40, 9);
+	//cin.clear();
+	system("pause");
+} //end of endProgram
+
+void gameOver()
+{ //end program with appropriate message
+	SelectBackColour(clBlack);
+	SelectTextColour(clYellow);
+	Gotoxy(40, 8);
+	cout << "GAME OVER!          ";
 	//hold output screen until a keyboard key is hit
 	Gotoxy(40, 9);
 	//cin.clear();
