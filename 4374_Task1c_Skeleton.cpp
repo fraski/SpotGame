@@ -39,6 +39,7 @@ const int  LEFT(75);         //left arrow
 //defining the other command letters
 const char QUIT('Q');        //end the game
 const char PLAY('P');		//play the game
+const char INFO('I');		//get info about the game
 //defining the cheats
 const char FREEZE('F');		//freeze game
 const char EXTERMINATE('X');	//exterminate remaining zombies
@@ -61,6 +62,7 @@ void updateGame(char g[][SIZEX], Item& sp, int k, string& mess, vector<Item> &ho
 void renderGame(const char g[][SIZEX], string mess, string playerName);
 void endProgram();
 void gameEntry();
+void infoScreen();
 int  getKeyPress();
 bool wantToQuit(int k);
 bool wantToFreeze(int f);
@@ -68,8 +70,8 @@ bool wantToEat(int e);
 bool wantToExterminateZombies(int x);
 void enterGame(string playerName);
 const string displayTime();
-
-
+const string s = "You are playing SPOT!\n\nSpot is a game where you (spot) have to try outrun the zombies with as many remaining pills as possible. You have 5 lives, which are deducted if a zombie hits you or you hit a hole.\n\nTo beat highscores, you must try complete the game in the shortest time and in the least amount of moves!\n\nCheats enabled in this Game:\nPress 'F' to freeze zombies\nPress 'X' to exterminate all zombies\nPress 'E' to eat all pills\n\nPress enter to return to entry screen";
+//int getBufferSize(int BUFFER_SIZE);
 int main()
 {
 	//action...
@@ -81,17 +83,23 @@ int main()
 void gameEntry() //first console screen
 {
 	bool wantToPlay(int k);
+	bool wantInformation(int k);
 	bool checkForSpaces(string playerName);
 	//display these somewhere else
 	cout << " SPOT   GROUP 1RR - Fraser Burns, Ellie Fuller, Roddy Munro\n";
 	cout << "date/time: " << displayTime() << endl;
-	cout << "Press 'P' to play game \n" << "Press 'Q' to quit";
+	cout << "Press 'P' to play game \n" << "Press 'Q' to quit \n" << "Press 'I' for more information" ;
 	int key(' ');
 	string playerName;
-
-	while (wantToQuit(key) == false && wantToPlay(key)==false)
+	
+	while (wantToQuit(key) == false && wantToPlay(key)==false && wantInformation(key) == false)
 	{
 		key = getKeyPress();
+		if (wantInformation(key) == true)
+		{
+			system("CLS");
+			infoScreen();
+		}
 		if (wantToPlay(key) == true)
 		{
 			system("CLS"); // change this
@@ -106,6 +114,57 @@ void gameEntry() //first console screen
 	endProgram();
 }
 
+void infoScreen()
+{
+	void outputText(string s);
+	outputText(s);
+	if (cin.get() == '\n')
+	{
+		system("CLS");
+		gameEntry();
+	}
+	
+}
+
+void outputText(string s)
+{
+	//int GetBufferWidth();
+	int bufferWidth = 80;
+
+	for (unsigned int i = 1; i <= s.length(); i++)
+	{
+		char c = s[i - 1];
+
+		int spaceCount = 0;
+
+		// Add whitespace if newline detected.
+		if (c == '\n')
+		{
+			int charNumOnLine = ((i) % bufferWidth);
+			spaceCount = bufferWidth - charNumOnLine;
+			s.insert((i - 1), (spaceCount), ' ');
+			i += (spaceCount);
+			continue;
+		}
+
+		if ((i % bufferWidth) == 0)
+		{
+			if (c != ' ')
+			{
+				for (int j = (i - 1); j > -1; j--)
+				{
+					if (s[j] == ' ')
+					{
+						s.insert(j, spaceCount, ' ');
+						break;
+					}
+					else spaceCount++;
+				}
+			}
+		}
+	}
+	cout << s << endl;
+}
 void doScoreStuff(string playerName, int lives)
 {
 	if (!ifstream(playerName+".scr"))
@@ -758,6 +817,7 @@ int getKeyPress()
 	return(keyPressed);
 } //end of getKeyPress
 
+
 bool isArrowKey(int key)
 { //check if the key pressed is an arrow key (also accept 'K', 'M', 'H' and 'P')
 	return ((key == LEFT) || (key == RIGHT) || (key == UP) || (key == DOWN));
@@ -773,6 +833,11 @@ bool wantToPlay(int key)
 	return (key == PLAY);
 }
 
+bool wantInformation(int key)
+{
+	//check if key 'I' is pressed
+	return (key == INFO);
+}
 bool wantToFreeze(int key)
 {
 	return (key == FREEZE);
