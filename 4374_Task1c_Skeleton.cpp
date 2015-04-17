@@ -169,11 +169,23 @@ void outputText(string s)
 }
 void doScoreStuff(string playerName, int lives)
 {
-	if (!ifstream(playerName+".scr"))
+	ofstream file(playerName + ".txt");
+	if (!ifstream(playerName+".txt"))
 	{
-		ofstream file(playerName + ".scr");
 		file << lives;
 	}
+	file.close();
+
+	string sScore;
+	int highScore;
+	ifstream inFile(playerName + ".txt");
+	getline(inFile, sScore);
+	highScore = stoi(sScore);
+	if (lives > highScore) {
+		file.trunc;
+		file << lives;
+	}
+	file.close();
 }
 
 //this function doesnt do anything useful
@@ -246,13 +258,14 @@ void enterGame(string playerName) //console screen where you play the game
 	//	cout << pills;
 
 	} while (!wantToQuit(key) && lives > 0);               //while user does not want to quit
-	doScoreStuff(playerName, lives);
 	if (lives <= 0) //sometimes lives comes out as -1, when you touch a hole and zombie perhaps? dont think that should happen
 	{
+		doScoreStuff(playerName, lives);
 		gameOver();
 	}
 	else
 	{
+		doScoreStuff(playerName, lives);
 		endProgram();
 	}
 	//endProgram(); //display final message
@@ -327,14 +340,9 @@ void placeZombies(char grid[][SIZEX], vector<Item> zombies){
 			grid[y][x] = ZOMBIE;
 		}
 	}
-
 }
 
 void generateZombies(vector<Item> &zombies){
-	//do we need a for loop here? 
-	//seems pointless, we could literally just have 
-	//zombies[0].x = 1
-	//zombies[1].x = .. etc
 
 	for (int count = 0; count < 4; count++){
 		int x, y;
@@ -365,8 +373,6 @@ void generateZombies(vector<Item> &zombies){
 
 void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key,int &lives)
 {
-	//this procedure is VERY FLAWED - only 1 zombie moves, and this is in relation to what arrow is pressed. zombie also can go through walls and holes, etc
-	//attempted to change it, got all 4 moving, but they are WAY too smart. I think we should add some kind of random element in it
 	int count = 0;
 	for (Item zombie : zombies)
 	{
@@ -432,10 +438,7 @@ void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key,i
 					break;
 				}
 			}
-			/*
-			zombies.at(count).x = zombie.x;
-			zombies.at(count).y = zombie.y;
-			*/
+			
 			switch (grid[zombie.y][zombie.x])
 			{		//...depending on what's on the target position in grid...
 			case HOLE:
@@ -447,8 +450,7 @@ void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key,i
 				break;
 			case SPOT:
 				lives--;
-				//zombie.x = origX;
-				//zombie.y = origY;
+
 				switch (count)
 				{
 				case 0:
@@ -470,28 +472,6 @@ void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key,i
 					break;
 				}
 				break;
-			/*case ZOMBIE:
-				switch (count)
-				{
-				case 0:
-					zombie.x = 1;
-					zombie.y = 1;
-
-					break;
-				case 1:
-					zombie.x = 1;
-					zombie.y = 10;
-					break;
-				case 2:
-					zombie.x = 18;
-					zombie.y = 1;
-					break;
-				case 3:
-					zombie.x = 18;
-					zombie.y = 10;
-					break;
-				}
-				break;*/
 			}
 			zombies.at(count).x = zombie.x;
 			zombies.at(count).y = zombie.y;
@@ -737,15 +717,8 @@ void updateGrid(char grid[][SIZEX], Item spot, vector<Item> &holes, vector<Item>
 		}
 		
 	}
-	//can't seem to get zombies back in their corners after they've been exterminated with the 'X' key, probably my logic is wrong below
-	/*if ((wantToExterminate == FALSE) && (exterminated == TRUE))
-	{
-		placeZombies(grid, zombies);
-		exterminated = FALSE;
-	}*/
 
 	placeZombies(grid, zombies);  //set zombies in grid
-	//must put spot in after holes!
 
 } //end of updateGrid
 
@@ -931,7 +904,7 @@ void showTitle(string playerName)
 
 int getHighScore(string playerName)
 {
-	ifstream file(playerName + ".scr");
+	ifstream file(playerName + ".txt");
 	if (!file)
 	{
 		return -1;
@@ -966,10 +939,10 @@ void endProgram()
 { //end program with appropriate message
 	SelectBackColour(clBlack);
 	SelectTextColour(clYellow);
-	Gotoxy(40, 8);
+	Gotoxy(40, 10);
 	cout << "PLAYER QUITS!          ";
 	//hold output screen until a keyboard key is hit
-	Gotoxy(40, 9);
+	Gotoxy(40, 11);
 	//cin.clear();
 	system("pause");
 } //end of endProgram
@@ -978,10 +951,10 @@ void gameOver()
 { //end program with appropriate message
 	SelectBackColour(clBlack);
 	SelectTextColour(clYellow);
-	Gotoxy(40, 8);
-	cout << "GAME OVER!          ";
+	Gotoxy(40, 10);
+	cout << "YOU RAN OUT OF LIVES!  ";
 	//hold output screen until a keyboard key is hit
-	Gotoxy(40, 9);
+	Gotoxy(40, 11);
 	//cin.clear();
 	system("pause");
 } //end of endProgram
