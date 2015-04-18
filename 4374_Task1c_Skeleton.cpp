@@ -179,11 +179,18 @@ void doScoreStuff(string playerName, int lives)
 	string sScore;
 	int highScore;
 	ifstream inFile(playerName + ".txt");
-	getline(inFile, sScore);
-	highScore = stoi(sScore);
+	if (inFile){
+		getline(inFile, sScore);
+		if (sScore != ""){
+			highScore = stoi(sScore);
+		}
+		else{
+			highScore = 0;
+		}
+	}
 	if (lives > highScore) {
-		file.clear();
 		file << lives;
+		file.clear();
 	}
 	inFile.close();
 }
