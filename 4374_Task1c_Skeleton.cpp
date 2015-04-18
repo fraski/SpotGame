@@ -170,11 +170,11 @@ void outputText(string s)
 void doScoreStuff(string playerName, int lives)
 {
 	ofstream file(playerName + ".txt");
-	if (!ifstream(playerName+".txt"))
+	/*if (!ifstream(playerName+".txt"))
 	{
 		file << lives;
 	}
-	file.close();
+	file.close();*/
 
 	string sScore;
 	int highScore;
@@ -182,10 +182,10 @@ void doScoreStuff(string playerName, int lives)
 	getline(inFile, sScore);
 	highScore = stoi(sScore);
 	if (lives > highScore) {
-		file.trunc;
+		file.clear();
 		file << lives;
 	}
-	file.close();
+	inFile.close();
 }
 
 //this function doesnt do anything useful
@@ -246,6 +246,7 @@ void enterGame(string playerName) //console screen where you play the game
 		{
 			for (int count = 0; count < 8; count++)
 				pills.at(count).destroyed = true;
+			countPills = 0;
 			updateGame(grid, spot, key, message, holes, pills, lives, countPills, zombies, zombiesFrozen, wantToExterminate, exterminated);
 		}
 		else
@@ -355,15 +356,15 @@ void generateZombies(vector<Item> &zombies){
 			break;
 		case 1:
 			x = 1;
-			y = 10;
+			y = (SIZEY - 2);
 			break;
 		case 2:
-			x = 18;
+			x = (SIZEX - 2);
 			y = 1;
 			break;
 		case 3:
-			x = 18;
-			y = 10;
+			x = (SIZEX - 2);
+			y = (SIZEY - 2);
 			break;
 		}
 		Item zombie = { ZOMBIE, x, y};
@@ -460,15 +461,15 @@ void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key,i
 					break;
 				case 1:
 					zombie.x = 1;
-					zombie.y = 10;
+					zombie.y = (SIZEY - 2);
 					break;
 				case 2:
-					zombie.x = 18;
+					zombie.x = (SIZEX - 2);
 					zombie.y = 1;
 					break;
 				case 3:
-					zombie.x = 18;
-					zombie.y = 10;
+					zombie.x = (SIZEX - 2);
+					zombie.y = (SIZEY - 2);
 					break;
 				}
 				break;
@@ -492,15 +493,15 @@ void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key,i
 					break;
 				case 1:
 					zombies.at(zom).x = 1;
-					zombies.at(zom).y = 10;
+					zombies.at(zom).y = (SIZEY - 2);
 					break;
 				case 2:
-					zombies.at(zom).x = 18;
+					zombies.at(zom).x = (SIZEX- 2);
 					zombies.at(zom).y = 1;
 					break;
 				case 3:
-					zombies.at(zom).x = 18;
-					zombies.at(zom).y = 10;
+					zombies.at(zom).x = (SIZEX - 2);
+					zombies.at(zom).y = (SIZEY - 2);
 					break;
 				}
 		
@@ -513,15 +514,15 @@ void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key,i
 					break;
 				case 1:
 					zombies.at(x).x = 1;
-					zombies.at(x).y = 10;
+					zombies.at(x).y = (SIZEY - 2);
 					break;
 				case 2:
-					zombies.at(x).x = 18;
+					zombies.at(x).x = (SIZEX - 2);
 					zombies.at(x).y = 1;
 					break;
 				case 3:
-					zombies.at(x).x = 18;
-					zombies.at(x).y = 10;
+					zombies.at(x).x = (SIZEX - 2);
+					zombies.at(x).y = (SIZEY - 2);
 					break;
 				}
 			}
@@ -940,7 +941,7 @@ void endProgram()
 	SelectBackColour(clBlack);
 	SelectTextColour(clYellow);
 	Gotoxy(40, 10);
-	cout << "PLAYER QUITS!          ";
+	cout << "YOU QUIT!             ";
 	//hold output screen until a keyboard key is hit
 	Gotoxy(40, 11);
 	//cin.clear();
@@ -952,7 +953,7 @@ void gameOver()
 	SelectBackColour(clBlack);
 	SelectTextColour(clYellow);
 	Gotoxy(40, 10);
-	cout << "YOU RAN OUT OF LIVES!  ";
+	cout << "YOU LOST!             ";
 	//hold output screen until a keyboard key is hit
 	Gotoxy(40, 11);
 	//cin.clear();
