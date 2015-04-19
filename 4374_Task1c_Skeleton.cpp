@@ -649,8 +649,17 @@ bool checkPillCoords(int x, int y, vector<Item> pills, vector<Item> holes, vecto
 
 void setSpotInitialCoordinates(Item& spot)
 { //set spot coordinates inside the grid at random at beginning of game
-	spot.y = SIZEY / 2;      //vertical coordinate in range [1..(SIZEY - 2)]
-	spot.x = SIZEX / 2;    //horizontal coordinate in range [1..(SIZEX - 2)]
+	spot.y = Random(SIZEY - 3);      //vertical coordinate in range [1..(SIZEY - 2)]
+	spot.x = Random(SIZEX - 3);    //horizontal coordinate in range [1..(SIZEX - 2)]
+	if (spot.x == 1)
+		spot.x = spot.x + 1;
+	if (spot.x == 2)
+		spot.x = spot.x + 2;
+
+	if (spot.y == 1)
+		spot.y = spot.y + 1;
+	if (spot.y == 2)
+		spot.y = spot.y + 2;
 } //end of setSpotInitialoordinates
 
 void setGrid(char grid[][SIZEX])
