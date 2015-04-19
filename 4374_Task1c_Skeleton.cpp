@@ -48,7 +48,7 @@ const char EAT('E');		//eat all remaining pills
 struct Item{
 	const char symbol;	     //symbol on grid
 	int x, y;			     //coordinates
-	bool destroyed;
+	bool destroyed, exterminated;
 };
 
 //---------------------------------------------------------------------------
@@ -60,8 +60,9 @@ void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item> &holes, vector<
 bool isArrowKey(int k);
 void updateGame(char g[][SIZEX], Item& sp, int k, string& mess, vector<Item> &holes, vector<Item> &pills, int& lives, int& countPills, vector<Item> &zombies, bool zombiesFrozen, bool wantToExterminate, bool &exterminated);
 void renderGame(const char g[][SIZEX], string mess, string playerName);
-void endProgram();
-void gameOver();
+void quitProgram();
+void noLivesLeft();
+void noZombiesLeft(int countPills);
 void gameEntry();
 void infoScreen();
 int  getKeyPress();
@@ -72,11 +73,10 @@ bool wantToExterminateZombies(int x);
 void enterGame(string playerName);
 const string displayTime();
 const string s = "You are playing SPOT!\n\nSpot is a game where you (spot) have to try outrun the zombies with as many remaining pills as possible. You have 5 lives, which are deducted if a zombie hits you or you hit a hole.\n\nTo beat highscores, you must try complete the game in the shortest time and in the least amount of moves!\n\nCheats enabled in this Game:\nPress 'F' to freeze zombies\nPress 'X' to exterminate all zombies\nPress 'E' to eat all pills\n\nPress enter to return to entry screen";
-//int getBufferSize(int BUFFER_SIZE);
+
 int main()
 {
 	
-	//action...
 	gameEntry();
 	return 0;
 } //end main
@@ -139,7 +139,6 @@ void outputText(string s)
 
 		int spaceCount = 0;
 
-		// Add whitespace if newline detected.
 		if (c == '\n')
 		{
 			int charNumOnLine = ((i) % bufferWidth);
@@ -169,16 +168,11 @@ void outputText(string s)
 }
 void doScoreStuff(string playerName, int lives)
 {
-	ofstream file(playerName + ".txt");
-	/*if (!ifstream(playerName+".txt"))
-	{
-		file << lives;
-	}
-	file.close();*/
-
 	string sScore;
-	int highScore;
+	int highScore = 0;
 	ifstream inFile(playerName + ".txt");
+	ofstream file(playerName + ".txt");
+
 	if (inFile){
 		getline(inFile, sScore);
 		if (sScore != ""){
@@ -189,9 +183,11 @@ void doScoreStuff(string playerName, int lives)
 		}
 	}
 	if (lives > highScore) {
+		
 		file << lives;
 		file.clear();
 	}
+	file.close();
 	inFile.close();
 }
 
@@ -215,13 +211,14 @@ void enterGame(string playerName) //console screen where you play the game
 	Item spot = { SPOT };                   //Spot's symbol and position (0, 0) 
 	int lives = 5, zombiesFreezeCount = 1, zombiesExterminateCount = 1, countPills = 8;
 	string message("LET'S START...      "); //current message to player
-	//int holes[12][2]; //holds x and y for each hole
-	//not sure how to do this without this weird work around..
+
 	vector<Item> holes;
 	vector<Item> pills;
 	vector<Item> zombies;
 
 	void doScoreStuff(string, int);
+	
+	bool zombiesRemain(vector<Item> zombies);
 
 	initialiseGame(grid, spot, holes, pills, zombies);           //initialise grid (incl. walls and spot)
 	int key(' ');                         //create key to store keyboard events
@@ -263,20 +260,31 @@ void enterGame(string playerName) //console screen where you play the game
 		cout << ("Lives: ") << lives << "   ";
 		cout << ("Pills: ") << countPills;
 
-	//	cout << pills;
+	} while (!wantToQuit(key) && lives > 0 && zombiesRemain(zombies) == true);               //while user does not want to quit
+	if (lives <= 0) 
+	{
+		doScoreStuff(playerName, lives);
+		noLivesLeft();
+	}
+	else if (lives <= 0)
+	{
+		doScoreStuff(playerName, lives);
+		quitProgram();
+	}
+	else if (zombiesRemain(zombies) == false)
+	{
+		doScoreStuff(playerName, lives);
+		noZombiesLeft(countPills);
+	}
+	
+}
 
-	} while (!wantToQuit(key) && lives > 0);               //while user does not want to quit
-	if (lives <= 0) //sometimes lives comes out as -1, when you touch a hole and zombie perhaps? dont think that should happen
-	{
-		doScoreStuff(playerName, lives);
-		gameOver();
-	}
+bool zombiesRemain(vector<Item> zombies)
+{
+	if (zombies.at(0).destroyed == false || zombies.at(1).destroyed == false || zombies.at(2).destroyed == false || zombies.at(3).destroyed == false)
+		return true;
 	else
-	{
-		doScoreStuff(playerName, lives);
-		endProgram();
-	}
-	//endProgram(); //display final message
+		return false;
 }
 
 const string displayTime()
@@ -711,15 +719,15 @@ void updateGrid(char grid[][SIZEX], Item spot, vector<Item> &holes, vector<Item>
 				break;
 			case 1:
 				zombies.at(count).x = 1;
-				zombies.at(count).y = 10;
+				zombies.at(count).y = (SIZEY - 2);
 				break;
 			case 2:
-				zombies.at(count).x = 18;
+				zombies.at(count).x = (SIZEX - 2);
 				zombies.at(count).y = 1;
 				break;
 			case 3:
-				zombies.at(count).x = 18;
-				zombies.at(count).y = 10;
+				zombies.at(count).x = (SIZEX - 2);
+				zombies.at(count).y = (SIZEY - 2);
 				break;
 			}
 		}
@@ -771,9 +779,6 @@ void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, string& mes
 			}
 			
 		}
-		
-		//pills.at(count).destroyed = true;
-		//above statement doesnt work at all, tried to use the same stuff as used when a zombie hits a hole
 		break;
 	}
 } //end of updateSpotCoordinates
@@ -943,7 +948,7 @@ void showMessage(string m)
 	cout << m;	//display current message
 } //end of showMessage
 
-void endProgram()
+void quitProgram()
 { //end program with appropriate message
 	SelectBackColour(clBlack);
 	SelectTextColour(clYellow);
@@ -953,9 +958,9 @@ void endProgram()
 	Gotoxy(40, 11);
 	//cin.clear();
 	system("pause");
-} //end of endProgram
+} //end of quitProgram
 
-void gameOver()
+void noLivesLeft()
 { //end program with appropriate message
 	SelectBackColour(clBlack);
 	SelectTextColour(clYellow);
@@ -965,4 +970,16 @@ void gameOver()
 	Gotoxy(40, 11);
 	//cin.clear();
 	system("pause");
-} //end of endProgram
+} //end of noLivesLeft
+
+void noZombiesLeft(int countPills)
+{ //end program with appropriate message
+	SelectBackColour(clBlack);
+	SelectTextColour(clYellow);
+	Gotoxy(40, 10);
+	cout << "YOU WON WITH " << countPills << " pills remaining!";
+	//hold output screen until a keyboard key is hit
+	Gotoxy(40, 11);
+	//cin.clear();
+	system("pause");
+} //end of noZombiesLeft
