@@ -98,19 +98,20 @@ void gameEntry() //first console screen
 		key = getKeyPress(); //reads in key from keyboard
 		if (wantInformation(key) == true) //if key pressed = I, returns true
 		{
-			system("CLS"); //clear console window
+			Clrscr(); //clear console window
 			infoScreen(); //function call which displays information about the game
 		}
-		if (wantToPlay(key) == true) //if key pressed = P, returns true
+		if (wantToPlay(key) == true)
 		{
-			system("CLS"); //clear console window
+			Clrscr(); // change this
 			do {
 				cout << "Enter player name (20 characters max): ";
-				cin >> playerName; //user input
+				getline(cin, playerName); //user input
 			} while ((playerName.length() > 20) || (checkForSpaces(playerName) == true)); //run loop until user enters a valid name (less than 20, no spaces)
-			system("CLS"); //clear console window
-			enterGame(playerName); //pass playername into function by value	 // pass key into this by reference
+			Clrscr(); //clear console window
+			enterGame(playerName); //pass playername into function by value
 		}
+
 	}
 	
 }
@@ -121,7 +122,7 @@ void infoScreen() //function displaying game information
 	outputText(s); //calling function which returns a string 's'
 	if (cin.get() == '\n') //when user presses enter key, clear screen and return to original console window
 	{
-		system("CLS");
+		Clrscr();
 		gameEntry();
 	}
 	
@@ -164,32 +165,34 @@ void outputText(string s) //function which processes the string, implements word
 	}
 	cout << s << endl; //output the string
 }
+
 void doScoreStuff(string playerName, int lives) //calculate high scores, passing in current players name and lives left over
 {
-	string sScore; 
+	string sScore; //initialise variable to read current highscore in file
 	int highScore = 0; //initialise highscore as 0
-	ifstream inFile(playerName + ".txt"); //declare file variable for input named with the playername variable, followed by .txt to save as text file 
-	ofstream file(playerName + ".txt"); //declare output file 
+	ifstream inFile(playerName + ".txt"); //declare file variable for input named with the playername variable, followed by .txt to save as score file
+
 
 	if (inFile){ //if file exists
-		getline(inFile, sScore); //read line from txt file and store in string score
-		if (sScore != ""){ //if string is not empty...
+		getline(inFile, sScore); //read line from scr file and store in string score
+
+		if (!sScore.empty()){//if string is not empty...
 			highScore = stoi(sScore); //...convert string to integer, stored in highScore
 		}
-		else{ //if string is empty
-			highScore = 0; //keep variable set to 0
-		}
 	}
+	
+
 	if (lives > highScore) { //if lives in current game is greater than a highscore stored
-		
+		ofstream file(playerName + ".txt"); //declare output file
+		file << lives; //store integer 'lives' into the scr file
 		file.clear(); //clear contents of file
-		file << lives; //store integer 'lives' into the txt file
+		file.close();//close output file
 	}
-	file.close(); //close output file
-	inFile.close(); //close input file
+
+	inFile.close();//close input file
 }
 
-//this function doesnt do anything useful
+
 bool checkForSpaces(string playerName) //check for spaces when user inputs name
 {
 	bool spacesPresent = false; //initialise variable for checking spaces
@@ -259,31 +262,33 @@ void enterGame(string playerName) //console screen where you play the game
 		cout << ("Lives: ") << lives << "   "; //output remaining lives to user
 		cout << ("Pills: ") << countPills; //output remaining pills to user
 
-	} while (!wantToQuit(key) && lives > 0 && zombiesRemain(zombies) == true);               //while user does not want to quit
-	if (lives <= 0) 
+	} while (!wantToQuit(key) && lives > 0 && zombiesRemain(zombies) == true); //while user has lives, doesn't want to quit or zombies still in the grid
+	if (lives <= 0)	//if no more lives left...
 	{
-		doScoreStuff(playerName, lives);
-		noLivesLeft();
+		doScoreStuff(playerName, lives); //check and save high score to file if needed
+		noLivesLeft(); //quit the game and display relevant message
 	}
-	else if (lives <= 0)
+	else if (wantToQuit(key)) //if user wants to quit...
 	{
-		doScoreStuff(playerName, lives);
-		quitProgram();
+		doScoreStuff(playerName, lives); //check and save high score to file if needed
+		quitProgram(); //quit the game and display relevant message
 	}
-	else if (zombiesRemain(zombies) == false)
+	else if (zombiesRemain(zombies) == false) //if no more zombies in the grid...
 	{
-		doScoreStuff(playerName, lives);
-		noZombiesLeft(countPills);
+		updateGame(grid, spot, key, message, holes, pills, lives, countPills, zombies, zombiesFrozen, wantToExterminate, exterminated);
+		doScoreStuff(playerName, lives); //check and save high score to file if needed
+		noZombiesLeft(countPills); //quit the game and display relevant message
 	}
+
 	
 }
 
-bool zombiesRemain(vector<Item> zombies)
+bool zombiesRemain(vector<Item> zombies) //checks that there are still zombies in the grid
 {
 	if (zombies.at(0).destroyed == false || zombies.at(1).destroyed == false || zombies.at(2).destroyed == false || zombies.at(3).destroyed == false)
-		return true;
+		return true; //if at least one zombie hasnt been destroyed, then zombiesRemain is true
 	else
-		return false;
+		return false; //if all zombies are destroyed, then zombiesRemain is false
 }
 
 const string displayTime()
@@ -348,11 +353,12 @@ void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item> &holes, vector<
 
 void placeZombies(char grid[][SIZEX], vector<Item> zombies){
 	for (Item zombie : zombies){
-		if (zombie.destroyed == false){
+		if ((zombie.destroyed == false) && (zombie.exterminated == false))	//checks that the zombies haven't been exterminated or destroyed permanently
+		{ 
 			int x, y;
 			y = zombie.y;
 			x = zombie.x;
-			grid[y][x] = ZOMBIE;
+			grid[y][x] = ZOMBIE; //places a zombie symbol in the coordinates that have been assigned to the zombie
 		}
 	}
 }
@@ -648,17 +654,21 @@ bool checkPillCoords(int x, int y, vector<Item> pills, vector<Item> holes, vecto
 
 void setSpotInitialCoordinates(Item& spot)
 { //set spot coordinates inside the grid at random at beginning of game
-	spot.y = Random(SIZEY - 3);      //vertical coordinate in range [1..(SIZEY - 2)]
-	spot.x = Random(SIZEX - 3);    //horizontal coordinate in range [1..(SIZEX - 2)]
-	if (spot.x == 1)
-		spot.x = spot.x + 1;
-	if (spot.x == 2)
-		spot.x = spot.x + 2;
+	spot.y = Random(SIZEY - 2);      //vertical coordinate in range [1..(SIZEY - 3)]
+	spot.x = Random(SIZEX - 2);    //horizontal coordinate in range [1..(SIZEX - 3)]
+	if (spot.x == 0)	//checks that spot is not placed in a wall
+		spot.x = spot.x + 1;	
 
-	if (spot.y == 1)
+	if (spot.y == 0)	//checks that spot is not placed in a wall
 		spot.y = spot.y + 1;
-	if (spot.y == 2)
-		spot.y = spot.y + 2;
+
+	if (spot.x == 1) //checks that spot is not in a zombie position
+		spot.x = spot.x + 1;
+
+	if (spot.y == 1) //checks that spot is not in a zombie position
+		spot.y = spot.y + 1;
+	
+		
 } //end of setSpotInitialoordinates
 
 void setGrid(char grid[][SIZEX])
@@ -704,18 +714,18 @@ void updateGrid(char grid[][SIZEX], Item spot, vector<Item> &holes, vector<Item>
 		moveZombies(grid, zombies, spot, key,lives);
 	}
 	if (wantToExterminate == TRUE && exterminated == false){
-		zombies.at(0).destroyed = true;
-		zombies.at(1).destroyed = true;
-		zombies.at(2).destroyed = true;
-		zombies.at(3).destroyed = true;
+		zombies.at(0).exterminated = true;
+		zombies.at(1).exterminated = true;
+		zombies.at(2).exterminated = true;
+		zombies.at(3).exterminated = true;
 		exterminated = TRUE;
 		
 	}
 	else if(wantToExterminate == false && exterminated == true){
-		zombies.at(0).destroyed = false;
-		zombies.at(1).destroyed = false;
-		zombies.at(2).destroyed = false;
-		zombies.at(3).destroyed = false;
+		zombies.at(0).exterminated = false;
+		zombies.at(1).exterminated = false;
+		zombies.at(2).exterminated = false;
+		zombies.at(3).exterminated = false;
 		exterminated = false;
 		for (int count = 0; count < 4; count++){
 			switch (count)
@@ -849,16 +859,19 @@ bool wantInformation(int key)
 }
 bool wantToFreeze(int key)
 {
+	//check if key 'F' is pressed
 	return (key == FREEZE);
 }
 
 bool wantToExterminateZombies(int key)
 {
+	//check if key 'X' is pressed
 	return (key == EXTERMINATE);
 }
 
 bool wantToEat(int key)
 {
+	//check if key 'E' is pressed
 	return (key == EAT);
 }
 
@@ -926,11 +939,11 @@ void showTitle(string playerName)
 int getHighScore(string playerName)
 {
 	ifstream file(playerName + ".txt");
-	if (!file)
+	if (!file)	//if file doesnt exist, player hasnt played before, so no previous high score
 	{
 		return -1;
 	}
-	else
+	else  //if file does exist, read contents of file
 	{
 		string sScore;
 		getline(file, sScore);
