@@ -95,7 +95,7 @@ void gameEntry() //first console screen
 
 	Gotoxy(30, 0);
 
-	cout << " SPOT   GROUP 1RR\n\nFraser Burns, Ellie Fuller, Roddy Munro\n\n";
+	cout << " SPOT   GROUP 1RR\n\nFraser Burns -24017624, Ellie Fuller -24044160, Roddy Munro -24006031\n\n";
 
 	SelectTextColour(clYellow);
 	cout << "Press 'P' to play game \n" << "Press 'Q' to quit \n" << "Press 'I' for more information" ;
