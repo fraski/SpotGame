@@ -88,8 +88,16 @@ void gameEntry() //first console screen
 	//setting up function to check validity of user input 
 	bool checkForSpaces(string playerName);
 	//info
-	cout << " SPOT   GROUP 1RR - Fraser Burns, Ellie Fuller, Roddy Munro\n";
-	cout << "date/time: " << displayTime() << endl;
+	SelectBackColour(clBlack);
+	SelectTextColour(clGreen);
+	Gotoxy(60, 0);
+	cout << displayTime() << endl;
+
+	Gotoxy(30, 0);
+
+	cout << " SPOT   GROUP 1RR\n\nFraser Burns, Ellie Fuller, Roddy Munro\n\n";
+
+	SelectTextColour(clYellow);
 	cout << "Press 'P' to play game \n" << "Press 'Q' to quit \n" << "Press 'I' for more information" ;
 	int key(' '); //create key to store keyboard events
 	string playerName; //define playerName as string
