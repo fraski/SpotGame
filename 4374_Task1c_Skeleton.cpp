@@ -6,7 +6,7 @@
 #include <iomanip>           //for formatted output in 'cout'
 #include <conio.h>           //for getch()
 #include <string>            //for string
-#include <vector>
+#include <vector>			//for vectors
 #include <fstream>			//for files
 
 using namespace std;
@@ -48,14 +48,13 @@ const char EAT('E');		//eat all remaining pills
 struct Item{
 	const char symbol;	     //symbol on grid
 	int x, y;			     //coordinates
-	bool destroyed, exterminated;
+	bool destroyed, exterminated; //boolean var's for cheat enabling
 };
 
 //---------------------------------------------------------------------------
 //----- run game
 //---------------------------------------------------------------------------
 //function declarations (prototypes)
-
 void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item> &holes, vector<Item> &pills, vector<Item> &zombies);
 bool isArrowKey(int k);
 void updateGame(char g[][SIZEX], Item& sp, int k, string& mess, vector<Item> &holes, vector<Item> &pills, int& lives, int& countPills, vector<Item> &zombies, bool zombiesFrozen, bool wantToExterminate, bool &exterminated);
@@ -76,51 +75,51 @@ const string s = "You are playing SPOT!\n\nSpot is a game where you (spot) have 
 
 int main()
 {
-	
-	gameEntry();
+	gameEntry(); //function call to first console screen
 	return 0;
 } //end main
 
 
 void gameEntry() //first console screen
 {
-	bool wantToPlay(int k);
+	//set up functions for different key presses
+	bool wantToPlay(int k); 
 	bool wantInformation(int k);
+	//setting up function to check validity of user input 
 	bool checkForSpaces(string playerName);
-	//display these somewhere else
+	//info
 	cout << " SPOT   GROUP 1RR - Fraser Burns, Ellie Fuller, Roddy Munro\n";
 	cout << "date/time: " << displayTime() << endl;
 	cout << "Press 'P' to play game \n" << "Press 'Q' to quit \n" << "Press 'I' for more information" ;
-	int key(' ');
-	string playerName;
-	
-	while (wantToQuit(key) == false && wantToPlay(key)==false && wantInformation(key) == false)
+	int key(' '); //create key to store keyboard events
+	string playerName; //define playerName as string
+	while (wantToQuit(key) == false && wantToPlay(key)==false && wantInformation(key) == false) //runs loop until user presses a key (p, q or i)
 	{
-		key = getKeyPress();
-		if (wantInformation(key) == true)
+		key = getKeyPress(); //reads in key from keyboard
+		if (wantInformation(key) == true) //if key pressed = I, returns true
 		{
-			system("CLS");
-			infoScreen();
+			system("CLS"); //clear console window
+			infoScreen(); //function call which displays information about the game
 		}
-		if (wantToPlay(key) == true)
+		if (wantToPlay(key) == true) //if key pressed = P, returns true
 		{
-			system("CLS"); // change this
+			system("CLS"); //clear console window
 			do {
 				cout << "Enter player name (20 characters max): ";
-				cin >> playerName;
-			} while ((playerName.length() > 20) || (checkForSpaces(playerName) == true));
-			system("CLS");
-			enterGame(playerName); // pass key into this by reference
+				cin >> playerName; //user input
+			} while ((playerName.length() > 20) || (checkForSpaces(playerName) == true)); //run loop until user enters a valid name (less than 20, no spaces)
+			system("CLS"); //clear console window
+			enterGame(playerName); //pass playername into function by value	 // pass key into this by reference
 		}
 	}
 	
 }
 
-void infoScreen()
+void infoScreen() //function displaying game information
 {
-	void outputText(string s);
-	outputText(s);
-	if (cin.get() == '\n')
+	void outputText(string s); //function prototype
+	outputText(s); //calling function which returns a string 's'
+	if (cin.get() == '\n') //when user presses enter key, clear screen and return to original console window
 	{
 		system("CLS");
 		gameEntry();
@@ -128,137 +127,137 @@ void infoScreen()
 	
 }
 
-void outputText(string s)
+void outputText(string s) //function which processes the string, implements word wrap as lot of writing for console
 {
-	//int GetBufferWidth();
-	int bufferWidth = 80;
+	int bufferWidth = 80; //set bufferwidth to standard size 80
 
-	for (unsigned int i = 1; i <= s.length(); i++)
+	for (unsigned int i = 1; i <= s.length(); i++) //looping through each character in the string passed to the function
 	{
-		char c = s[i - 1];
+		char c = s[i - 1]; //temp var for each character into 'c' (i-1 as loop starts from 1, array starts from 0)
 
-		int spaceCount = 0;
+		int spaceCount = 0; //initialise variable to keep note of how many characters looped back through to find a space
 
-		if (c == '\n')
+		if (c == '\n') //if '\n' is detected in string, new line
 		{
-			int charNumOnLine = ((i) % bufferWidth);
-			spaceCount = bufferWidth - charNumOnLine;
-			s.insert((i - 1), (spaceCount), ' ');
-			i += (spaceCount);
-			continue;
+			int charNumOnLine = ((i) % bufferWidth); //temp var which contains characters position on the line
+			spaceCount = bufferWidth - charNumOnLine; //calculate amount of spaces needed to insert into string to move #
+			s.insert((i - 1), (spaceCount), ' '); //insert blank space
+			i += (spaceCount); //increment loop by amount of spaces we just inserted
+			continue; 
 		}
 
-		if ((i % bufferWidth) == 0)
+		if ((i % bufferWidth) == 0) //check i is a multiple of our buffer
 		{
-			if (c != ' ')
+			if (c != ' ') //if the character isn't a blank space
 			{
-				for (int j = (i - 1); j > -1; j--)
+				for (int j = (i - 1); j > -1; j--) //loop until we find a space (end of a word)
 				{
 					if (s[j] == ' ')
 					{
-						s.insert(j, spaceCount, ' ');
+						s.insert(j, spaceCount, ' '); //found last word that fits on line, input spaces till it fits buffer width
 						break;
 					}
-					else spaceCount++;
+					else spaceCount++; //increment spaces to fill the line to the end
 				}
 			}
 		}
 	}
-	cout << s << endl;
+	cout << s << endl; //output the string
 }
-void doScoreStuff(string playerName, int lives)
+void doScoreStuff(string playerName, int lives) //calculate high scores, passing in current players name and lives left over
 {
-	string sScore;
-	int highScore = 0;
-	ifstream inFile(playerName + ".txt");
-	ofstream file(playerName + ".txt");
+	string sScore; 
+	int highScore = 0; //initialise highscore as 0
+	ifstream inFile(playerName + ".txt"); //declare file variable for input named with the playername variable, followed by .txt to save as text file 
+	ofstream file(playerName + ".txt"); //declare output file 
 
-	if (inFile){
-		getline(inFile, sScore);
-		if (sScore != ""){
-			highScore = stoi(sScore);
+	if (inFile){ //if file exists
+		getline(inFile, sScore); //read line from txt file and store in string score
+		if (sScore != ""){ //if string is not empty...
+			highScore = stoi(sScore); //...convert string to integer, stored in highScore
 		}
-		else{
-			highScore = 0;
+		else{ //if string is empty
+			highScore = 0; //keep variable set to 0
 		}
 	}
-	if (lives > highScore) {
+	if (lives > highScore) { //if lives in current game is greater than a highscore stored
 		
-		file << lives;
-		file.clear();
+		file.clear(); //clear contents of file
+		file << lives; //store integer 'lives' into the txt file
 	}
-	file.close();
-	inFile.close();
+	file.close(); //close output file
+	inFile.close(); //close input file
 }
 
 //this function doesnt do anything useful
-bool checkForSpaces(string playerName)
+bool checkForSpaces(string playerName) //check for spaces when user inputs name
 {
-	bool spacesPresent = false;
+	bool spacesPresent = false; //initialise variable for checking spaces
 	
-	for (int count = 0; count < playerName.length(); count++)
+	for (int count = 0; count < playerName.length(); count++) //loop through each character in string playerName
 	{
-		if (playerName[count] == ' '){
-			spacesPresent = true;
+		if (playerName[count] == ' '){  //checking if character is a space
+			spacesPresent = true; //set variable to true if space existed
 		}
 	}
-	return spacesPresent;
+	return spacesPresent; //return true/false to determine validity of name
 }
 
 void enterGame(string playerName) //console screen where you play the game
 {   //local variable declarations 
 	char grid[SIZEY][SIZEX];                //grid for display
 	Item spot = { SPOT };                   //Spot's symbol and position (0, 0) 
-	int lives = 5, zombiesFreezeCount = 1, zombiesExterminateCount = 1, countPills = 8;
+	int lives = 5, zombiesFreezeCount = 1, zombiesExterminateCount = 1, countPills = 8; //initialising variables
 	string message("LET'S START...      "); //current message to player
 
-	vector<Item> holes;
+	//create vectors
+	vector<Item> holes; 
 	vector<Item> pills;
 	vector<Item> zombies;
 
-	void doScoreStuff(string, int);
+	void doScoreStuff(string, int); //call function which calculates score for current game 
 	
-	bool zombiesRemain(vector<Item> zombies);
+	bool zombiesRemain(vector<Item> zombies); //function prototype
 
 	initialiseGame(grid, spot, holes, pills, zombies);           //initialise grid (incl. walls and spot)
 	int key(' ');                         //create key to store keyboard events
-	bool zombiesFrozen = FALSE, wantToExterminate = FALSE, exterminated = FALSE;;
+	bool zombiesFrozen = FALSE, wantToExterminate = FALSE, exterminated = FALSE; //initialise local variables
 	do {
 		renderGame(grid, message, playerName);        //render game state on screen
 		message = "                    "; //reset message
 		key = getKeyPress();              //read in next keyboard event
-		if (isArrowKey(key))
-			updateGame(grid, spot, key, message, holes, pills, lives, countPills, zombies, zombiesFrozen, wantToExterminate, exterminated);
-		else if (wantToFreeze(key))
+		if (isArrowKey(key)) //checks if key is one of the arrow keys
+			updateGame(grid, spot, key, message, holes, pills, lives, countPills, zombies, zombiesFrozen, wantToExterminate, exterminated); //calls funciton which will change spots position on the grid
+		else if (wantToFreeze(key)) //checks if key is 'F' 
 		{
-			zombiesFreezeCount++;
-			if ((zombiesFreezeCount % 2) == 0)
-				zombiesFrozen = TRUE;
+			zombiesFreezeCount++; //count how many times zombies have been frozen
+			if ((zombiesFreezeCount % 2) == 0) //check if user wants to freeze/unfreeze 
+				zombiesFrozen = TRUE; //set to true when 'F' has been pressed once
 			else
-				zombiesFrozen = FALSE;
+				zombiesFrozen = FALSE; //set to false then user want's to unfreeze
 		}
-		else if (wantToExterminateZombies(key))
+		else if (wantToExterminateZombies(key)) //if key pressed is 'X'
 		{
-			zombiesExterminateCount++;
-			if ((zombiesExterminateCount % 2) == 0)
-				wantToExterminate = TRUE;
+			zombiesExterminateCount++; //count how amny times zombies have been frozen
+			if ((zombiesExterminateCount % 2) == 0) // check if user wants to exterminate or un-exterminate
+				wantToExterminate = TRUE; //set to true when 'X' has been pressed once
 			else
-				wantToExterminate = FALSE;
-			updateGame(grid, spot, key, message, holes, pills, lives, countPills, zombies, zombiesFrozen, wantToExterminate, exterminated);
+				wantToExterminate = FALSE; //set to false when user want's to un-exterminate the zombies
+			updateGame(grid, spot, key, message, holes, pills, lives, countPills, zombies, zombiesFrozen, wantToExterminate, exterminated); //call function to remove/add zombies back to grid
 		}
-		else if (wantToEat(key))
+		else if (wantToEat(key)) //if key pressed is 'E'
 		{
-			for (int count = 0; count < 8; count++)
-				pills.at(count).destroyed = true;
-			countPills = 0;
-			updateGame(grid, spot, key, message, holes, pills, lives, countPills, zombies, zombiesFrozen, wantToExterminate, exterminated);
+			for (int count = 0; count < 8; count++) //loop through each of the pils
+				pills.at(count).destroyed = true; //destroy a pill from items
+			countPills = 0; //set to 0 as all pills now destroyed
+			updateGame(grid, spot, key, message, holes, pills, lives, countPills, zombies, zombiesFrozen, wantToExterminate, exterminated); //call function to remove pills from grid
 		}
 		else
 			message = "INVALID KEY!        "; //set 'Invalid key' message
 		
 		
-		cout << ("Lives: ") << lives << "   ";
-		cout << ("Pills: ") << countPills;
+		cout << ("Lives: ") << lives << "   "; //output remaining lives to user
+		cout << ("Pills: ") << countPills; //output remaining pills to user
 
 	} while (!wantToQuit(key) && lives > 0 && zombiesRemain(zombies) == true);               //while user does not want to quit
 	if (lives <= 0) 
