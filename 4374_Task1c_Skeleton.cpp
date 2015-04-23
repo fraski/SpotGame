@@ -356,7 +356,7 @@ void updateGame(char grid[][SIZEX], Item& spot, int key, string& message, vector
 void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item> &holes, vector<Item> &pills, vector<Item> &zombies, int noOfHoles, int countPills)
 { //initialise grid and place spot in middle
 	void setGrid(char[][SIZEX]);
-	void setSpotInitialCoordinates(Item& spot);
+	void setSpotInitialCoordinates(Item& spot, char gr[][SIZEX]);
 
 	void generateZombies(vector<Item> &zombie);
 	void placeZombies(char gr[][SIZEX], vector<Item> zombies);
@@ -373,7 +373,7 @@ void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item> &holes, vector<
 
 
 	Seed();                            //seed random number generator
-	setSpotInitialCoordinates(spot);   //initialise spot position
+	setSpotInitialCoordinates(spot, grid);   //initialise spot position
 	setGrid(grid);                     //reset empty grid
 	placeSpot(grid, spot);             //set spot in grid
 
@@ -732,22 +732,25 @@ bool checkPillCoords(int x, int y, vector<Item> pills, vector<Item> holes, vecto
 	return isValid;
 }
 
-void setSpotInitialCoordinates(Item& spot)
+void setSpotInitialCoordinates(Item& spot, char gr[][SIZEX])
 { //set spot coordinates inside the grid at random at beginning of game
-	spot.y = Random(SIZEY - 2);      //vertical coordinate in range [1..(SIZEY - 3)]
-	spot.x = Random(SIZEX - 2);    //horizontal coordinate in range [1..(SIZEX - 3)]
-	if (spot.x == 0)	//checks that spot is not placed in a wall
-		spot.x = spot.x + 1;
+	do {
+		spot.y = Random(SIZEY - 2);      //vertical coordinate in range [1..(SIZEY - 3)]
+		spot.x = Random(SIZEX - 2);    //horizontal coordinate in range [1..(SIZEX - 3)]
+		if (spot.x == 0)	//checks that spot is not placed in a wall
+			spot.x = spot.x + 1;
 
-	if (spot.y == 0)	//checks that spot is not placed in a wall
-		spot.y = spot.y + 1;
+		if (spot.y == 0)	//checks that spot is not placed in a wall
+			spot.y = spot.y + 1;
 
-	if (spot.x == 1) //checks that spot is not in a zombie position
-		spot.x = spot.x + 1;
+		if (spot.x == 1) //checks that spot is not in a zombie position
+			spot.x = spot.x + 1;
 
-	if (spot.y == 1) //checks that spot is not in a zombie position
-		spot.y = spot.y + 1;
-
+		if (spot.y == 1) //checks that spot is not in a zombie position
+			spot.y = spot.y + 1;
+	} while (gr[spot.y][spot.x] == WALL);
+		
+	
 
 } //end of setSpotInitialoordinates
 
