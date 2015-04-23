@@ -70,6 +70,9 @@ bool wantToFreeze(int f);
 bool wantToEat(int e);
 bool wantToExterminateZombies(int x);
 void enterGame(string playerName, int levelNo);
+void magicProtection();
+
+
 const string displayTime();
 const string s = "You are playing SPOT!\n\nSpot is a game where you (spot) have to try outrun the zombies with as many remaining pills as possible. You have 5 lives, which are deducted if a zombie hits you or you hit a hole.\n\nTo beat highscores, you must try complete the game in the shortest time and in the least amount of moves!\n\nCheats enabled in this Game:\nPress 'F' to freeze zombies\nPress 'X' to exterminate all zombies\nPress 'E' to eat all pills\n\nPress enter to return to entry screen";
 
@@ -880,12 +883,85 @@ void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, string& mes
 				pills.at(counter).destroyed = true;
 				lives++;
 				countPills--;
+				for (int i = 0; i < 8; i++)
+				{
+					magicProtection();
+				}
 			}
 
 		}
 		break;
 	}
 } //end of updateSpotCoordinates
+
+
+void magicProtection()
+{
+	for (Item zombie : zombies)
+	{
+		if (zombie.destroyed == false){
+			int random = Random(3);
+			int move;
+			int origX = zombie.x;
+			int origY = zombie.y;
+			if (zombie.x >= spot.x && zombie.y >= spot.y){		//condense this down??
+				switch (random){
+				case 1:
+					zombie.x--;
+					break;
+				case 2:
+					zombie.x--;
+					zombie.y--;
+					break;
+				case 3:
+					zombie.y--;
+					break;
+				}
+			}
+			else if (zombie.x <= spot.x && zombie.y >= spot.y){
+				switch (random){
+				case 1:
+					zombie.x++;
+					break;
+				case 2:
+					zombie.x++;
+					zombie.y--;
+					break;
+				case 3:
+					zombie.y--;
+					break;
+				}
+
+			}
+			else if (zombie.x >= spot.x && zombie.y <= spot.y){
+				switch (random){
+				case 1:
+					zombie.x--;
+					break;
+				case 2:
+					zombie.x--;
+					zombie.y++;
+					break;
+				case 3:
+					zombie.y++;
+					break;
+				}
+			}
+			else if (zombie.x <= spot.x && zombie.y <= spot.y){
+				switch (random){
+				case 1:
+					zombie.x++;
+					break;
+				case 2:
+					zombie.x++;
+					zombie.y++;
+					break;
+				case 3:
+					zombie.y++;
+					break;
+				}
+			}
+}
 
 //---------------------------------------------------------------------------
 //----- process key
