@@ -57,7 +57,7 @@ struct Item{
 //function declarations (prototypes)
 void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item> &holes, vector<Item> &pills, vector<Item> &zombies, int countPills, int noOfHoles);
 bool isArrowKey(int k);
-void updateGame(char g[][SIZEX], Item& sp, int k, string& mess, vector<Item> &holes, vector<Item> &pills, int& lives, int& countPills, vector<Item> &zombies, bool zombiesFrozen, bool wantToExterminate, bool &exterminated, int noOfHoles, int noOfPills);
+void updateGame(char g[][SIZEX], Item& sp, int k, string& mess, vector<Item> &holes, vector<Item> &pills, int& lives, int& countPills, vector<Item> &zombies, bool zombiesFrozen, bool wantToExterminate, bool &exterminated, int noOfHoles, int noOfPills, bool magicProtection);
 void renderGame(const char g[][SIZEX], string mess, string playerName);
 void quitProgram();
 void noLivesLeft();
@@ -70,7 +70,6 @@ bool wantToFreeze(int f);
 bool wantToEat(int e);
 bool wantToExterminateZombies(int x);
 void enterGame(string playerName, int levelNo);
-void magicProtection();
 
 
 const string displayTime();
@@ -265,13 +264,13 @@ void enterGame(string playerName, int levelNo) //console screen where you play t
 
 	initialiseGame(grid, spot, holes, pills, zombies, noOfHoles, countPills);           //initialise grid (incl. walls and spot)
 	int key(' ');                         //create key to store keyboard events
-	bool zombiesFrozen = FALSE, wantToExterminate = FALSE, exterminated = FALSE; //initialise local variables
+	bool zombiesFrozen = FALSE, wantToExterminate = FALSE, exterminated = FALSE, magicProtection = FALSE; //initialise local variables
 	do {
 		renderGame(grid, message, playerName);        //render game state on screen
 		message = "                    "; //reset message
 		key = getKeyPress();              //read in next keyboard event
 		if (isArrowKey(key)) //checks if key is one of the arrow keys
-			updateGame(grid, spot, key, message, holes, pills, lives, countPills, zombies, zombiesFrozen, wantToExterminate, exterminated, noOfHoles, noOfPills); //calls funciton which will change spots position on the grid
+			updateGame(grid, spot, key, message, holes, pills, lives, countPills, zombies, zombiesFrozen, wantToExterminate, exterminated, noOfHoles, noOfPills, magicProtection); //calls funciton which will change spots position on the grid
 		else if (wantToFreeze(key)) //checks if key is 'F' 
 		{
 			zombiesFreezeCount++; //count how many times zombies have been frozen
@@ -287,14 +286,14 @@ void enterGame(string playerName, int levelNo) //console screen where you play t
 				wantToExterminate = TRUE; //set to true when 'X' has been pressed once
 			else
 				wantToExterminate = FALSE; //set to false when user want's to un-exterminate the zombies
-			updateGame(grid, spot, key, message, holes, pills, lives, countPills, zombies, zombiesFrozen, wantToExterminate, exterminated, noOfHoles, noOfPills); //call function to remove/add zombies back to grid
+			updateGame(grid, spot, key, message, holes, pills, lives, countPills, zombies, zombiesFrozen, wantToExterminate, exterminated, noOfHoles, noOfPills, magicProtection); //call function to remove/add zombies back to grid
 		}
 		else if (wantToEat(key)) //if key pressed is 'E'
 		{
 			for (int count = 0; count < 8; count++) //loop through each of the pils
 				pills.at(count).destroyed = true; //destroy a pill from items
 			countPills = 0; //set to 0 as all pills now destroyed
-			updateGame(grid, spot, key, message, holes, pills, lives, countPills, zombies, zombiesFrozen, wantToExterminate, exterminated, noOfHoles, noOfPills); //call function to remove pills from grid
+			updateGame(grid, spot, key, message, holes, pills, lives, countPills, zombies, zombiesFrozen, wantToExterminate, exterminated, noOfHoles, noOfPills, magicProtection); //call function to remove pills from grid
 		}
 		else
 			message = "INVALID KEY!        "; //set 'Invalid key' message
@@ -316,7 +315,7 @@ void enterGame(string playerName, int levelNo) //console screen where you play t
 	}
 	else if (zombiesRemain(zombies) == false) //if no more zombies in the grid...
 	{
-		updateGame(grid, spot, key, message, holes, pills, lives, countPills, zombies, zombiesFrozen, wantToExterminate, exterminated, noOfHoles, noOfPills);
+		updateGame(grid, spot, key, message, holes, pills, lives, countPills, zombies, zombiesFrozen, wantToExterminate, exterminated, noOfHoles, noOfPills, magicProtection);
 		doScoreStuff(playerName, lives); //check and save high score to file if needed
 		noZombiesLeft(countPills, levelNo, playerName); //quit the game and display relevant message
 	}
@@ -342,14 +341,14 @@ const string displayTime()
 	return buf;
 }
 
-void updateGame(char grid[][SIZEX], Item& spot, int key, string& message, vector<Item> &holes, vector<Item> &pills, int& lives, int& countPills, vector<Item> &zombies, bool zombiesFrozen, bool wantToExterminate, bool &exterminated, int noOfHoles, int noOfPills)
+void updateGame(char grid[][SIZEX], Item& spot, int key, string& message, vector<Item> &holes, vector<Item> &pills, int& lives, int& countPills, vector<Item> &zombies, bool zombiesFrozen, bool wantToExterminate, bool &exterminated, int noOfHoles, int noOfPills, bool magicProtection)
 { //updateGame state
-	void updateSpotCoordinates(const char g[][SIZEX], Item& spot, int key, string& mess, int& lives, int& countPills, vector<Item>& pills, int noOfPills);
-	void updateGrid(char g[][SIZEX], Item spot, vector<Item> &holes, vector<Item> &pills, vector<Item> &zombies, int key, bool zombiesFrozen, int &lives, bool wantToExterminate, bool &exterminated, int noOfHoles, int countPills);
+	void updateSpotCoordinates(const char g[][SIZEX], Item& spot, int key, string& mess, int& lives, int& countPills, vector<Item>& pills, int noOfPills, bool& magicProtection);
+	void updateGrid(char g[][SIZEX], Item spot, vector<Item> &holes, vector<Item> &pills, vector<Item> &zombies, int key, bool zombiesFrozen, int &lives, bool wantToExterminate, bool &exterminated, int noOfHoles, int countPills, bool magicProtection);
 
-	updateSpotCoordinates(grid, spot, key, message, lives, countPills, pills, noOfPills);    //update spot coordinates
+	updateSpotCoordinates(grid, spot, key, message, lives, countPills, pills, noOfPills, magicProtection);    //update spot coordinates
 	//according to key
-	updateGrid(grid, spot, holes, pills, zombies, key, zombiesFrozen, lives, wantToExterminate, exterminated, noOfHoles, countPills);                             //update grid information
+	updateGrid(grid, spot, holes, pills, zombies, key, zombiesFrozen, lives, wantToExterminate, exterminated, noOfHoles, countPills, magicProtection);                             //update grid information
 }
 
 //---------------------------------------------------------------------------
@@ -469,7 +468,7 @@ void generateZombies(vector<Item> &zombies){
 	}
 }
 
-void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key, int &lives, int noOfHoles)
+void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key, int &lives, int noOfHoles, bool magicProtection)
 {
 	int count = 0;
 	for (Item zombie : zombies)
@@ -547,29 +546,41 @@ void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key, 
 				zombie.y = origY;
 				break;
 			case SPOT:
-				lives--;
-
-				switch (count)
+				if (magicProtection == false)
 				{
-				case 0:
-					zombie.x = 1;
-					zombie.y = 1;
+					lives--;
 
-					break;
-				case 1:
-					zombie.x = 1;
-					zombie.y = (SIZEY - 2);
-					break;
-				case 2:
-					zombie.x = (SIZEX - 2);
-					zombie.y = 1;
-					break;
-				case 3:
-					zombie.x = (SIZEX - 2);
-					zombie.y = (SIZEY - 2);
-					break;
+					switch (count)
+					{
+					case 0:
+						zombie.x = 1;
+						zombie.y = 1;
+
+						break;
+					case 1:
+						zombie.x = 1;
+						zombie.y = (SIZEY - 2);
+						break;
+					case 2:
+						zombie.x = (SIZEX - 2);
+						zombie.y = 1;
+						break;
+					case 3:
+						zombie.x = (SIZEX - 2);
+						zombie.y = (SIZEY - 2);
+						break;
+					}
+				}
+				else if (magicProtection == true)
+				{
+					zombies.at(count).destroyed = true;
 				}
 				break;
+			}
+			if (magicProtection == true)
+			{
+				zombie.x = (zombie.x * -1);
+				zombie.y = (zombie.y * -1);
 			}
 			zombies.at(count).x = zombie.x;
 			zombies.at(count).y = zombie.y;
@@ -783,14 +794,14 @@ void placeSpot(char gr[][SIZEX], Item spot)
 //----- update grid state
 //---------------------------------------------------------------------------
 
-void updateGrid(char grid[][SIZEX], Item spot, vector<Item> &holes, vector<Item> &pills, vector<Item> &zombies, int key, bool zombiesFrozen, int& lives, bool wantToExterminate, bool &exterminated, int noOfHoles, int countPills)
+void updateGrid(char grid[][SIZEX], Item spot, vector<Item> &holes, vector<Item> &pills, vector<Item> &zombies, int key, bool zombiesFrozen, int& lives, bool wantToExterminate, bool &exterminated, int noOfHoles, int countPills, bool magicProtection)
 { //update grid configuration after each move
 	void setGrid(char[][SIZEX]);
 	void placeSpot(char g[][SIZEX], Item spot);
 	void placeHoles(char[][SIZEX], vector<Item> holes);
 	void placePills(char[][SIZEX], vector<Item> pills);
 	void placeZombies(char[][SIZEX], vector<Item> zombies);
-	void moveZombies(char[][SIZEX], vector<Item> &zombies, Item spot, int key, int& lives, int noOfHoles);
+	void moveZombies(char[][SIZEX], vector<Item> &zombies, Item spot, int key, int& lives, int noOfHoles, bool magicProtection);
 	void placeWalls(char[][SIZEX]);
 
 	setGrid(grid);	         //reset empty grid
@@ -799,7 +810,7 @@ void updateGrid(char grid[][SIZEX], Item spot, vector<Item> &holes, vector<Item>
 	placeSpot(grid, spot);	 //set spot in grid
 	placePills(grid, pills); //set pills in grid
 	if (zombiesFrozen == FALSE){
-		moveZombies(grid, zombies, spot, key, lives, noOfHoles);
+		moveZombies(grid, zombies, spot, key, lives, noOfHoles, magicProtection);
 	}
 	if (wantToExterminate == TRUE && exterminated == false){
 		zombies.at(0).exterminated = true;
@@ -847,7 +858,7 @@ void updateGrid(char grid[][SIZEX], Item spot, vector<Item> &holes, vector<Item>
 //---------------------------------------------------------------------------
 //----- move the spot
 //---------------------------------------------------------------------------
-void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, string& mess, int& lives, int& countPills, vector<Item> &pills, int noOfPills)
+void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, string& mess, int& lives, int& countPills, vector<Item> &pills, int noOfPills, bool& magicProtection)
 { //move spot in required direction
 	void setKeyDirection(int k, int& dx, int& dy);
 
@@ -883,85 +894,13 @@ void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, string& mes
 				pills.at(counter).destroyed = true;
 				lives++;
 				countPills--;
-				for (int i = 0; i < 8; i++)
-				{
-					magicProtection();
-				}
+				magicProtection = true;
 			}
 
 		}
 		break;
 	}
 } //end of updateSpotCoordinates
-
-
-void magicProtection()
-{
-	for (Item zombie : zombies)
-	{
-		if (zombie.destroyed == false){
-			int random = Random(3);
-			int move;
-			int origX = zombie.x;
-			int origY = zombie.y;
-			if (zombie.x >= spot.x && zombie.y >= spot.y){		//condense this down??
-				switch (random){
-				case 1:
-					zombie.x--;
-					break;
-				case 2:
-					zombie.x--;
-					zombie.y--;
-					break;
-				case 3:
-					zombie.y--;
-					break;
-				}
-			}
-			else if (zombie.x <= spot.x && zombie.y >= spot.y){
-				switch (random){
-				case 1:
-					zombie.x++;
-					break;
-				case 2:
-					zombie.x++;
-					zombie.y--;
-					break;
-				case 3:
-					zombie.y--;
-					break;
-				}
-
-			}
-			else if (zombie.x >= spot.x && zombie.y <= spot.y){
-				switch (random){
-				case 1:
-					zombie.x--;
-					break;
-				case 2:
-					zombie.x--;
-					zombie.y++;
-					break;
-				case 3:
-					zombie.y++;
-					break;
-				}
-			}
-			else if (zombie.x <= spot.x && zombie.y <= spot.y){
-				switch (random){
-				case 1:
-					zombie.x++;
-					break;
-				case 2:
-					zombie.x++;
-					zombie.y++;
-					break;
-				case 3:
-					zombie.y++;
-					break;
-				}
-			}
-}
 
 //---------------------------------------------------------------------------
 //----- process key
