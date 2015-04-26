@@ -40,6 +40,7 @@ const int  LEFT(75);         //left arrow
 const char QUIT('Q');        //end the game
 const char PLAY('P');		//play the game
 const char INFO('I');		//get info about the game
+const char REPLAY('R');     //replay recent moves
 //defining the cheats
 const char FREEZE('F');		//freeze game
 const char EXTERMINATE('X');	//exterminate remaining zombies
@@ -48,7 +49,9 @@ const char EAT('E');		//eat all remaining pills
 struct Item{
 	const char symbol;	     //symbol on grid
 	int x, y;			     //coordinates
-	bool destroyed, exterminated; //boolean var's for cheat enabling
+	bool destroyed, exterminated, protectionOn; //boolean var's for cheat enabling
+	int protectionCount;
+	vector<int[3]> history;
 };
 
 //---------------------------------------------------------------------------
@@ -68,6 +71,7 @@ int  getKeyPress();
 bool wantToQuit(int k);
 bool wantToFreeze(int f);
 bool wantToEat(int e);
+bool wantToReplay(int r);
 bool wantToExterminateZombies(int x);
 void enterGame(string playerName, int levelNo);
 const string displayTime();
@@ -92,7 +96,6 @@ void gameEntry() //first console screen
 	SelectTextColour(clGreen);
 	Gotoxy(60, 0);
 	cout << displayTime() << endl;
-
 	Gotoxy(30, 0);
 
 	cout << " SPOT   GROUP 1RR\n\nFraser Burns -24017624, Ellie Fuller -24044160, Roddy Munro -24006031\n\n";
@@ -227,9 +230,10 @@ void enterGame(string playerName, int levelNo) //console screen where you play t
 {   //local variable declarations 
 	char grid[SIZEY][SIZEX];                //grid for display
 	Item spot = { SPOT };                   //Spot's symbol and position (0, 0) 
+	spot.protectionOn = false;
 	int lives, zombiesFreezeCount = 1, zombiesExterminateCount = 1, countPills, noOfHoles; //initialising variables
 	string message("LET'S START...      "); //current message to player
-
+	bool replay = false;
 	switch (levelNo)
 	{
 	case 1:
@@ -258,17 +262,19 @@ void enterGame(string playerName, int levelNo) //console screen where you play t
 
 	void doScoreStuff(string, int); //call function which calculates score for current game 
 
-	bool zombiesRemain(vector<Item> zombies); //function prototype
+	void replayGame(Item spot, vector<Item> zombies, vector<Item> pills, vector<Item> holes);
 
+	bool zombiesRemain(vector<Item> zombies); //function prototype
 	initialiseGame(grid, spot, holes, pills, zombies, noOfHoles, countPills);           //initialise grid (incl. walls and spot)
 	int key(' ');                         //create key to store keyboard events
 	bool zombiesFrozen = FALSE, wantToExterminate = FALSE, exterminated = FALSE; //initialise local variables
 	do {
 		renderGame(grid, message, playerName);        //render game state on screen
 		message = "                    "; //reset message
-		key = getKeyPress();              //read in next keyboard event
-		if (isArrowKey(key)) //checks if key is one of the arrow keys
+		if (isArrowKey(key)){ //checks if key is one of the arrow keys
 			updateGame(grid, spot, key, message, holes, pills, lives, countPills, zombies, zombiesFrozen, wantToExterminate, exterminated, noOfHoles, noOfPills); //calls funciton which will change spots position on the grid
+
+		}
 		else if (wantToFreeze(key)) //checks if key is 'F' 
 		{
 			zombiesFreezeCount++; //count how many times zombies have been frozen
@@ -276,6 +282,7 @@ void enterGame(string playerName, int levelNo) //console screen where you play t
 				zombiesFrozen = TRUE; //set to true when 'F' has been pressed once
 			else
 				zombiesFrozen = FALSE; //set to false then user want's to unfreeze
+			
 		}
 		else if (wantToExterminateZombies(key)) //if key pressed is 'X'
 		{
@@ -292,6 +299,11 @@ void enterGame(string playerName, int levelNo) //console screen where you play t
 				pills.at(count).destroyed = true; //destroy a pill from items
 			countPills = 0; //set to 0 as all pills now destroyed
 			updateGame(grid, spot, key, message, holes, pills, lives, countPills, zombies, zombiesFrozen, wantToExterminate, exterminated, noOfHoles, noOfPills); //call function to remove pills from grid
+			
+		}
+		else if (wantToReplay(key)){
+			replayGame(spot, zombies, pills, holes);
+			
 		}
 		else
 			message = "INVALID KEY!        "; //set 'Invalid key' message
@@ -320,7 +332,11 @@ void enterGame(string playerName, int levelNo) //console screen where you play t
 
 
 }
+void replayGame(Item spot, vector<Item> zombies, vector<Item> pills, vector<Item> holes){
+	int turn = 0;
+	Clrscr();
 
+}
 bool zombiesRemain(vector<Item> zombies) //checks that there are still zombies in the grid
 {
 	if (zombies.at(0).destroyed == false || zombies.at(1).destroyed == false || zombies.at(2).destroyed == false || zombies.at(3).destroyed == false)
@@ -462,6 +478,8 @@ void generateZombies(vector<Item> &zombies){
 			break;
 		}
 		Item zombie = { ZOMBIE, x, y };
+		int history[3] = { zombie.y, zombie.x, 0 };
+		zombie.history.push_back(history);
 		zombies.push_back(zombie);
 	}
 }
@@ -476,31 +494,37 @@ void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key, 
 			int move;
 			int origX = zombie.x;
 			int origY = zombie.y;
+			int dx = 0, dy = 0;
+			if (spot.y == zombie.y && spot.x == zombie.x && spot.protectionOn == true){ //({
+				zombies.at(count).destroyed = true;
+				Beep(500, 300);
+
+			}
 			if (zombie.x >= spot.x && zombie.y >= spot.y){		//condense this down??
 				switch (random){
 				case 1:
-					zombie.x--;
+					dx--;
 					break;
 				case 2:
-					zombie.x--;
-					zombie.y--;
+					dx--;
+					dy--;
 					break;
 				case 3:
-					zombie.y--;
+					dy--;
 					break;
 				}
 			}
 			else if (zombie.x <= spot.x && zombie.y >= spot.y){
 				switch (random){
 				case 1:
-					zombie.x++;
+					dx++;
 					break;
 				case 2:
-					zombie.x++;
-					zombie.y--;
+					dx++;
+					dy--;
 					break;
 				case 3:
-					zombie.y--;
+					dy--;
 					break;
 				}
 
@@ -508,32 +532,41 @@ void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key, 
 			else if (zombie.x >= spot.x && zombie.y <= spot.y){
 				switch (random){
 				case 1:
-					zombie.x--;
+					dx--;
 					break;
 				case 2:
-					zombie.x--;
-					zombie.y++;
+					dx--;
+					dy++;
 					break;
 				case 3:
-					zombie.y++;
+					dy++;
 					break;
 				}
 			}
 			else if (zombie.x <= spot.x && zombie.y <= spot.y){
 				switch (random){
 				case 1:
-					zombie.x++;
+					dx++;
 					break;
 				case 2:
-					zombie.x++;
-					zombie.y++;
+					dx++;
+					dy++;
 					break;
 				case 3:
-					zombie.y++;
+					dy++;
 					break;
 				}
 			}
-
+			if (spot.protectionOn == false)
+			{
+				zombie.x += dx;
+				zombie.y += dy;
+			}
+			else
+			{
+				zombie.x -= dx;
+				zombie.y -= dy;
+			}
 			switch (grid[zombie.y][zombie.x])
 			{		//...depending on what's on the target position in grid...
 			case HOLE:
@@ -544,30 +577,34 @@ void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key, 
 				zombie.y = origY;
 				break;
 			case SPOT:
-				lives--;
+				if (spot.protectionOn == false){
+					lives--;
 
-				switch (count)
-				{
-				case 0:
-					zombie.x = 1;
-					zombie.y = 1;
+					switch (count)
+					{
+					case 0:
+						zombie.x = 1;
+						zombie.y = 1;
 
-					break;
-				case 1:
-					zombie.x = 1;
-					zombie.y = (SIZEY - 2);
-					break;
-				case 2:
-					zombie.x = (SIZEX - 2);
-					zombie.y = 1;
-					break;
-				case 3:
-					zombie.x = (SIZEX - 2);
-					zombie.y = (SIZEY - 2);
-					break;
+						break;
+					case 1:
+						zombie.x = 1;
+						zombie.y = (SIZEY - 2);
+						break;
+					case 2:
+						zombie.x = (SIZEX - 2);
+						zombie.y = 1;
+						break;
+					case 3:
+						zombie.x = (SIZEX - 2);
+						zombie.y = (SIZEY - 2);
+						break;
+					}
 				}
+				
 				break;
 			}
+
 			zombies.at(count).x = zombie.x;
 			zombies.at(count).y = zombie.y;
 		}
@@ -705,6 +742,8 @@ void generatePills(vector<Item> &pills, Item spot, vector<Item> holes, vector<It
 			}
 		} while (!checkPillCoords(x, y, pills, holes, zombies, grid));
 		Item pill = { PILL, x, y };
+		int history[3] = { pill.y, pill.x, 0 };
+		pill.history.push_back(history);
 		pills.push_back(pill);
 	}
 }
@@ -747,7 +786,8 @@ void setSpotInitialCoordinates(Item& spot)
 
 	if (spot.y == 1) //checks that spot is not in a zombie position
 		spot.y = spot.y + 1;
-
+	int history[3] = { spot.y, spot.x, 0 };
+	spot.history.push_back(history);
 
 } //end of setSpotInitialoordinates
 
@@ -790,7 +830,7 @@ void updateGrid(char grid[][SIZEX], Item spot, vector<Item> &holes, vector<Item>
 	setGrid(grid);	         //reset empty grid
 	placeWalls(grid);
 	placeHoles(grid, holes); //set holes in grid
-	placeSpot(grid, spot);	 //set spot in grid
+	placeSpot(grid, spot);	 //set spot in grid	
 	placePills(grid, pills); //set pills in grid
 	if (zombiesFrozen == FALSE){
 		moveZombies(grid, zombies, spot, key, lives, noOfHoles);
@@ -880,7 +920,30 @@ void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, string& mes
 			}
 
 		}
+		sp.protectionOn = true;
+		if (noOfPills == 8){
+			sp.protectionCount = 10;
+		}
+		else if (noOfPills == 5){
+			sp.protectionCount = 8;
+		}
+		else if (noOfPills == 2){
+			sp.protectionCount = 5;
+		}
+	
 		break;
+	case ZOMBIE:
+		if (sp.protectionOn == true){
+			sp.y += dy;   //go in that Y direction
+			sp.x += dx;   //go in that X direction
+		}
+		break;
+	}
+	if (sp.protectionOn == true){
+		sp.protectionCount--;
+		if (sp.protectionCount == 0){
+			sp.protectionOn = false;
+		}
 	}
 } //end of updateSpotCoordinates
 
@@ -934,7 +997,9 @@ bool wantToPlay(int key)
 { //check if key 'P' is pressed
 	return (key == PLAY);
 }
-
+bool wantToReplay(int key){
+	return (key == REPLAY);
+}
 bool wantInformation(int key)
 {
 	//check if key 'I' is pressed
@@ -1078,7 +1143,6 @@ void noLivesLeft()
 
 void noZombiesLeft(int countPills, int& levelNo, string playerName)
 { //end program with appropriate message
-	char increaseLevel;
 	levelNo++;
 	SelectBackColour(clBlack);
 	SelectTextColour(clYellow);
@@ -1086,12 +1150,6 @@ void noZombiesLeft(int countPills, int& levelNo, string playerName)
 	cout << "YOU WON WITH " << countPills << " pills remaining!";
 	if (levelNo <= 3)
 	{
-		do {
-			Gotoxy(40, 11);
-			cout << "ARE YOU READY FOR LEVEL " << levelNo << "? (Y/N) ";
-			cin >> increaseLevel;
-			increaseLevel = toupper(increaseLevel);
-		} while ((increaseLevel != 'Y') && (increaseLevel != 'N'));
 		Clrscr();
 		enterGame(playerName, levelNo);
 	}
