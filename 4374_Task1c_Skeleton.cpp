@@ -51,7 +51,9 @@ struct Item{
 	int x, y;			     //coordinates
 	bool destroyed, exterminated, protectionOn; //boolean var's for cheat enabling
 	int protectionCount;
-	vector<int[3]> history;
+	vector<int> historyX;
+	vector<int> historyY;
+	vector<int> historyState;
 };
 
 //---------------------------------------------------------------------------
@@ -271,9 +273,9 @@ void enterGame(string playerName, int levelNo) //console screen where you play t
 	do {
 		renderGame(grid, message, playerName);        //render game state on screen
 		message = "                    "; //reset message
+		key = getKeyPress();
 		if (isArrowKey(key)){ //checks if key is one of the arrow keys
 			updateGame(grid, spot, key, message, holes, pills, lives, countPills, zombies, zombiesFrozen, wantToExterminate, exterminated, noOfHoles, noOfPills); //calls funciton which will change spots position on the grid
-
 		}
 		else if (wantToFreeze(key)) //checks if key is 'F' 
 		{
@@ -303,7 +305,6 @@ void enterGame(string playerName, int levelNo) //console screen where you play t
 		}
 		else if (wantToReplay(key)){
 			replayGame(spot, zombies, pills, holes);
-			
 		}
 		else
 			message = "INVALID KEY!        "; //set 'Invalid key' message
@@ -333,8 +334,41 @@ void enterGame(string playerName, int levelNo) //console screen where you play t
 
 }
 void replayGame(Item spot, vector<Item> zombies, vector<Item> pills, vector<Item> holes){
+	//an attempt, but I believe it will go wrong. 
 	int turn = 0;
 	Clrscr();
+	char grid[SIZEY][SIZEX];
+	void setGrid(char[][SIZEX]);
+	void paintGrid(const char g[][SIZEX]);
+	setGrid(grid);
+	cout << spot.historyX.size();
+	while (turn < spot.historyX.size()){
+		
+			for (int x = 0; x < 4; x++){
+			if (zombies.at(x).historyState.at(turn) == 0){
+					grid[zombies.at(x).historyY.at(turn)][zombies.at(x).historyX.at(turn)] = ZOMBIE;
+				}
+			}
+			for (int x = 0; x < 12; x++){
+				grid[holes.at(x).historyY.at(0)][holes.at(x).historyX.at(0)] = HOLE;
+			}
+			if (turn == 0){
+				for (int x = 0; x < 8; x++){
+					if (pills.at(x).historyState.at(turn) == 0){
+						grid[pills.at(x).historyY.at(0)][pills.at(x).historyX.at(0)] = HOLE;
+					}
+					else{
+						grid[pills.at(x).historyY.at(0)][pills.at(x).historyX.at(0)] = TUNNEL;
+					}
+				}
+			}
+			
+			if (spot.historyState.at(turn) == 0)
+				grid[spot.historyY.at(turn)][spot.historyX.at(turn)] = SPOT;
+		paintGrid(grid);
+		Sleep(1000);
+		turn++;
+	}
 
 }
 bool zombiesRemain(vector<Item> zombies) //checks that there are still zombies in the grid
@@ -478,8 +512,9 @@ void generateZombies(vector<Item> &zombies){
 			break;
 		}
 		Item zombie = { ZOMBIE, x, y };
-		int history[3] = { zombie.y, zombie.x, 0 };
-		zombie.history.push_back(history);
+		zombie.historyX.push_back(x);
+		zombie.historyY.push_back(y);
+		zombie.historyState.push_back(0);
 		zombies.push_back(zombie);
 	}
 }
@@ -607,6 +642,14 @@ void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key, 
 
 			zombies.at(count).x = zombie.x;
 			zombies.at(count).y = zombie.y;
+			zombies.at(count).historyX.push_back(zombie.x);
+			zombies.at(count).historyY.push_back(zombie.y);
+			if (zombie.destroyed == true){
+				zombies.at(count).historyState.push_back(1);
+			}
+			else{
+				zombies.at(count).historyState.push_back(0);
+			}
 		}
 		count++;
 	}
@@ -688,6 +731,9 @@ void generateHoles(vector<Item> &holes, Item spot, vector<Item> zombies, char gr
 			}
 		} while (!checkHoleCoords(x, y, holes, zombies, grid));
 		Item hole = { HOLE, x, y };
+		hole.historyX.push_back(x);
+		hole.historyY.push_back(y);
+		hole.historyState.push_back(0);
 		holes.push_back(hole);
 	}
 	cout << "stop";
@@ -742,8 +788,9 @@ void generatePills(vector<Item> &pills, Item spot, vector<Item> holes, vector<It
 			}
 		} while (!checkPillCoords(x, y, pills, holes, zombies, grid));
 		Item pill = { PILL, x, y };
-		int history[3] = { pill.y, pill.x, 0 };
-		pill.history.push_back(history);
+		pill.historyX.push_back(x);
+		pill.historyY.push_back(y);
+		pill.historyState.push_back(0);
 		pills.push_back(pill);
 	}
 }
@@ -786,8 +833,9 @@ void setSpotInitialCoordinates(Item& spot)
 
 	if (spot.y == 1) //checks that spot is not in a zombie position
 		spot.y = spot.y + 1;
-	int history[3] = { spot.y, spot.x, 0 };
-	spot.history.push_back(history);
+	spot.historyX.push_back(spot.x);
+	spot.historyY.push_back(spot.y);
+	spot.historyState.push_back(0);
 
 } //end of setSpotInitialoordinates
 
@@ -917,6 +965,11 @@ void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, string& mes
 				pills.at(counter).destroyed = true;
 				lives++;
 				countPills--;
+				pills.at(counter).historyState.push_back(1);
+			}
+			else{
+				pills.at(counter).historyState.push_back(0);
+
 			}
 
 		}
@@ -945,6 +998,9 @@ void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, string& mes
 			sp.protectionOn = false;
 		}
 	}
+	sp.historyX.push_back(sp.x);
+	sp.historyY.push_back(sp.y);
+	sp.historyState.push_back(0);
 } //end of updateSpotCoordinates
 
 //---------------------------------------------------------------------------
