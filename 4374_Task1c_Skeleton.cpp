@@ -340,10 +340,10 @@ void replayGame(Item spot, vector<Item> zombies, vector<Item> pills, vector<Item
 	char grid[SIZEY][SIZEX];
 	void setGrid(char[][SIZEX]);
 	void paintGrid(const char g[][SIZEX]);
-	setGrid(grid);
+	
 	cout << spot.historyX.size();
 	while (turn < spot.historyX.size()){
-		
+			setGrid(grid);
 			for (int x = 0; x < 4; x++){
 			if (zombies.at(x).historyState.at(turn) == 0){
 					grid[zombies.at(x).historyY.at(turn)][zombies.at(x).historyX.at(turn)] = ZOMBIE;
@@ -524,7 +524,10 @@ void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key, 
 	int count = 0;
 	for (Item zombie : zombies)
 	{
-		if (zombie.destroyed == false){
+		if (zombie.destroyed == true){
+			zombies.at(count).historyState.push_back(1);
+		
+		}else{
 			int random = Random(3);
 			int move;
 			int origX = zombie.x;
@@ -644,15 +647,13 @@ void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key, 
 			zombies.at(count).y = zombie.y;
 			zombies.at(count).historyX.push_back(zombie.x);
 			zombies.at(count).historyY.push_back(zombie.y);
-			if (zombie.destroyed == true){
-				zombies.at(count).historyState.push_back(1);
-			}
-			else{
-				zombies.at(count).historyState.push_back(0);
-			}
+			zombies.at(count).historyState.push_back(0);
+			
 		}
 		count++;
+	
 	}
+	
 	for (int x = 0; x < 4; x++){
 		for (int zom = 0; zom < 4; zom++){
 			if (zombies.at(x).x == zombies.at(zom).x && zombies.at(x).y == zombies.at(zom).y && x != zom && zombies.at(x).destroyed == false && zombies.at(zom).destroyed == false){
@@ -700,8 +701,10 @@ void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key, 
 					break;
 				}
 			}
+			
 		}
 	}
+	
 }
 
 void placeHoles(char grid[][SIZEX], vector<Item> holes){
