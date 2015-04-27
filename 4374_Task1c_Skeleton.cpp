@@ -56,6 +56,7 @@ struct Item{
 	vector<int> historyState;
 };
 
+
 //---------------------------------------------------------------------------
 //----- run game
 //---------------------------------------------------------------------------
@@ -99,7 +100,6 @@ void gameEntry() //first console screen
 	Gotoxy(60, 0);
 	cout << displayTime() << endl;
 	Gotoxy(30, 0);
-
 	cout << " SPOT   GROUP 1RR\n\nFraser Burns -24017624, Ellie Fuller -24044160, Roddy Munro -24006031\n\n";
 
 	SelectTextColour(clYellow);
@@ -236,26 +236,26 @@ void enterGame(string playerName, int levelNo) //console screen where you play t
 	int lives, zombiesFreezeCount = 1, zombiesExterminateCount = 1, countPills, noOfHoles; //initialising variables
 	string message("LET'S START...      "); //current message to player
 	bool replay = false;
-	switch (levelNo)
+	switch (levelNo) //switch statement holding 3 possible levels user can use
 	{
-	case 1:
+	case 1: //if user presses 1
 		noOfHoles = 12;
 		countPills = 8;
 		lives = 8;
 		break;
-	case 2:
+	case 2: //if user presses 2
 		noOfHoles = 5;
 		countPills = 5;
 		lives = 5;
 		break;
-	case 3:
+	case 3: //if user presses 3
 		noOfHoles = 2;
 		countPills = 2;
 		lives = 3;
-		break;
+		break; 
 	}
 
-	int noOfPills = countPills;
+	int noOfPills = countPills; //set pill count after level has been chosen
 
 	//create vectors
 	vector<Item> holes;
@@ -264,7 +264,7 @@ void enterGame(string playerName, int levelNo) //console screen where you play t
 
 	void doScoreStuff(string, int); //call function which calculates score for current game 
 
-	void replayGame(Item spot, vector<Item> zombies, vector<Item> pills, vector<Item> holes);
+	void replayGame(Item spot, vector<Item> zombies, vector<Item> pills, vector<Item> holes); //call function which will replay the game upon user key press
 
 	bool zombiesRemain(vector<Item> zombies); //function prototype
 	initialiseGame(grid, spot, holes, pills, zombies, noOfHoles, countPills);           //initialise grid (incl. walls and spot)
@@ -303,8 +303,8 @@ void enterGame(string playerName, int levelNo) //console screen where you play t
 			updateGame(grid, spot, key, message, holes, pills, lives, countPills, zombies, zombiesFrozen, wantToExterminate, exterminated, noOfHoles, noOfPills); //call function to remove pills from grid
 			
 		}
-		else if (wantToReplay(key)){
-			replayGame(spot, zombies, pills, holes);
+		else if (wantToReplay(key)){ //if key pressed is 'R'
+			replayGame(spot, zombies, pills, holes); //call function to replay game
 		}
 		else
 			message = "INVALID KEY!        "; //set 'Invalid key' message
@@ -379,14 +379,14 @@ bool zombiesRemain(vector<Item> zombies) //checks that there are still zombies i
 		return false; //if all zombies are destroyed, then zombiesRemain is false
 }
 
-const string displayTime()
+const string displayTime() //function called when time needs to be displayed
 {
-	time_t     now = time(0);
-	struct tm  tstruct;
-	char       buf[80];
-	tstruct = *localtime(&now);
-	strftime(buf, sizeof(buf), "%d-%m-%Y.%X", &tstruct);
-	return buf;
+	time_t     now = time(0); //time type
+	struct tm  tstruct; //time structure initialised
+	char       buf[80];  //initialising buffer
+	tstruct = *localtime(&now); //get local time and put into tstruct
+	strftime(buf, sizeof(buf), "%d-%m-%Y.%X", &tstruct); //format date as string
+	return buf; //return buffer
 }
 
 void updateGame(char grid[][SIZEX], Item& spot, int key, string& message, vector<Item> &holes, vector<Item> &pills, int& lives, int& countPills, vector<Item> &zombies, bool zombiesFrozen, bool wantToExterminate, bool &exterminated, int noOfHoles, int noOfPills)
@@ -426,8 +426,7 @@ void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item> &holes, vector<
 	setSpotInitialCoordinates(spot);   //initialise spot position
 	setGrid(grid);                     //reset empty grid
 	placeSpot(grid, spot);             //set spot in grid
-
-	placeWalls(grid);
+	placeWalls(grid); //set walls in grid
 
 	generateZombies(zombies);
 	placeZombies(grid, zombies);
@@ -445,6 +444,8 @@ void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item> &holes, vector<
 
 void placeWalls(char grid[][SIZEX]) //find a more efficient way to do this??
 {
+
+	//place inner walls to coordinates on grid
 	grid[3][4] = WALL;
 	grid[3][5] = WALL;
 	grid[4][3] = WALL;
@@ -476,7 +477,7 @@ void placeWalls(char grid[][SIZEX]) //find a more efficient way to do this??
 }
 
 void placeZombies(char grid[][SIZEX], vector<Item> zombies){
-	for (Item zombie : zombies){
+	for (Item zombie : zombies){ //
 		if ((zombie.destroyed == false) && (zombie.exterminated == false))	//checks that the zombies haven't been exterminated or destroyed permanently
 		{
 			int x, y;
@@ -521,24 +522,26 @@ void generateZombies(vector<Item> &zombies){
 
 void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key, int &lives, int noOfHoles)
 {
-	int count = 0;
-	for (Item zombie : zombies)
+	int count = 0; //initialise to 0
+	for (Item zombie : zombies) //for every zombie existing in 'zombies', put their values into zombies
 	{
-		if (zombie.destroyed == true){
-			zombies.at(count).historyState.push_back(1);
+		if (zombie.destroyed == true){ //if zombie has been hit by spot
+			zombies.at(count).historyState.push_back(1); //return zombie to original starting point
 		
-		}else{
-			int random = Random(3);
+		}else{ //if zombie has not been hit by spot
+			int random = Random(3); //initialise 3 random moves for zombie to take
 			int move;
-			int origX = zombie.x;
-			int origY = zombie.y;
+			int origX = zombie.x; //put zombie's current x value into variable
+			int origY = zombie.y;//put zombie's current y value into variable
 			int dx = 0, dy = 0;
-			if (spot.y == zombie.y && spot.x == zombie.x && spot.protectionOn == true){ //({
-				zombies.at(count).destroyed = true;
-				Beep(500, 300);
+			if (spot.y == zombie.y && spot.x == zombie.x && spot.protectionOn == true){ //({		//if zombies coordinates match spots (collision) and magic protection is on
+				zombies.at(count).destroyed = true; //destroy that current zombie which collided
+				Beep(500, 300); //make noise
 
 			}
-			if (zombie.x >= spot.x && zombie.y >= spot.y){		//condense this down??
+
+			//make zombies run away from spot when magic protection is on
+			if (zombie.x >= spot.x && zombie.y >= spot.y){		//condense this down??   
 				switch (random){
 				case 1:
 					dx--;
@@ -595,6 +598,8 @@ void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key, 
 					break;
 				}
 			}
+
+			//not quite sure what this is doing...
 			if (spot.protectionOn == false)
 			{
 				zombie.x += dx;
@@ -605,35 +610,38 @@ void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key, 
 				zombie.x -= dx;
 				zombie.y -= dy;
 			}
+
+
 			switch (grid[zombie.y][zombie.x])
 			{		//...depending on what's on the target position in grid...
 			case HOLE:
-				zombies.at(count).destroyed = true;
+				zombies.at(count).destroyed = true; //destroy zombies when collide with a hole
 				break;
 			case WALL:
+				//zombie doesn't move - stays at current position if collision with wall
 				zombie.x = origX;
 				zombie.y = origY;
 				break;
 			case SPOT:
-				if (spot.protectionOn == false){
-					lives--;
+				if (spot.protectionOn == false){ //when spot doesn't have magic protection
+					lives--; //decrease life amount
 
-					switch (count)
+					switch (count) //current zombie, place back at original spot
 					{
-					case 0:
+					case 0: //top left corner
 						zombie.x = 1;
 						zombie.y = 1;
 
 						break;
-					case 1:
+					case 1: //bottom left corner
 						zombie.x = 1;
 						zombie.y = (SIZEY - 2);
 						break;
-					case 2:
+					case 2: //top right corner
 						zombie.x = (SIZEX - 2);
 						zombie.y = 1;
 						break;
-					case 3:
+					case 3: //bottom right corner
 						zombie.x = (SIZEX - 2);
 						zombie.y = (SIZEY - 2);
 						break;
@@ -643,6 +651,7 @@ void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key, 
 				break;
 			}
 
+			//not quite sure what this is doing either...
 			zombies.at(count).x = zombie.x;
 			zombies.at(count).y = zombie.y;
 			zombies.at(count).historyX.push_back(zombie.x);
@@ -650,16 +659,16 @@ void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key, 
 			zombies.at(count).historyState.push_back(0);
 			
 		}
-		count++;
+		count++; //increment to go to next zombie
 	
 	}
 	
-	for (int x = 0; x < 4; x++){
-		for (int zom = 0; zom < 4; zom++){
-			if (zombies.at(x).x == zombies.at(zom).x && zombies.at(x).y == zombies.at(zom).y && x != zom && zombies.at(x).destroyed == false && zombies.at(zom).destroyed == false){
-				cout << "\a";
+	for (int x = 0; x < 4; x++){ //looping through 4 times 
+		for (int zom = 0; zom < 4; zom++){ //looping through 4 times 
+			if (zombies.at(x).x == zombies.at(zom).x && zombies.at(x).y == zombies.at(zom).y && x != zom && zombies.at(x).destroyed == false && zombies.at(zom).destroyed == false){ //checking if zombies collide
+				cout << "\a"; //output error noise
 
-				switch (zom)
+				switch (zom) //reposition zombie which collided to original position
 				{
 				case 0:
 					zombies.at(zom).x = 1;
@@ -680,7 +689,7 @@ void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key, 
 					break;
 				}
 
-				switch (x)
+				switch (x) //reposition other zombie which collided to original position
 				{
 				case 0:
 					zombies.at(x).x = 1;
@@ -707,21 +716,20 @@ void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key, 
 	
 }
 
-void placeHoles(char grid[][SIZEX], vector<Item> holes){
-	for (Item hole : holes){
+void placeHoles(char grid[][SIZEX], vector<Item> holes){  //function to place holes
+	for (Item hole : holes){ //for every existing hole in holes, put their values into 'holes'
 		int x, y;
 		y = hole.y;
 		x = hole.x;
-		//grid[row][col]
-		grid[y][x] = HOLE;
+		grid[y][x] = HOLE; //randomly assign holes to coordinates on grid
 	}
 
 }
 
-void generateHoles(vector<Item> &holes, Item spot, vector<Item> zombies, char grid[][SIZEX], int noOfHoles){
-	bool checkHoleCoords(int, int, vector<Item>, vector<Item>, char grid[][SIZEX]);
-	Seed();
-	for (int count = 0; count < noOfHoles; count++){
+void generateHoles(vector<Item> &holes, Item spot, vector<Item> zombies, char grid[][SIZEX], int noOfHoles){ //function to create holes
+	bool checkHoleCoords(int, int, vector<Item>, vector<Item>, char grid[][SIZEX]); //receive true/false value to make sure holes aren't placed on any existing items in grid
+	Seed();  //seed random number generator
+	for (int count = 0; count < noOfHoles; count++){ //loop through each hole
 		int x, y;
 		do{
 			while ((y = Random(SIZEY - 2)) == spot.y){
@@ -732,7 +740,7 @@ void generateHoles(vector<Item> &holes, Item spot, vector<Item> zombies, char gr
 				//will repeat while loop if the Random number generated
 				//is either the spots location, or other hole locations
 			}
-		} while (!checkHoleCoords(x, y, holes, zombies, grid));
+		} while (!checkHoleCoords(x, y, holes, zombies, grid)); //loop through whilst s
 		Item hole = { HOLE, x, y };
 		hole.historyX.push_back(x);
 		hole.historyY.push_back(y);
@@ -979,6 +987,7 @@ void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, string& mes
 		sp.protectionOn = true;
 		if (noOfPills == 8){
 			sp.protectionCount = 10;
+			
 		}
 		else if (noOfPills == 5){
 			sp.protectionCount = 8;
