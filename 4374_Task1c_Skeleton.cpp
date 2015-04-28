@@ -574,7 +574,7 @@ void generateZombies(vector<Item> &zombies){
 	}
 }
 
-void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key, int &lives, int noOfHoles)
+void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key, int& lives, int noOfHoles, vector<Item> pills, int countPills, Item teleport, vector<Item> holes)
 {
 	int count = 0; //initialise to 0
 	for (Item zombie : zombies) //for every zombie existing in 'zombies', put their values into zombies
@@ -668,6 +668,19 @@ void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key, 
 
 			switch (grid[zombie.y][zombie.x])
 			{		//...depending on what's on the target position in grid...
+			case TELEPORT:
+				bool checkPillCoords(int, int, vector<Item>, vector<Item>, vector<Item>, char gr[][SIZEX], Item);
+				Seed();
+					int x, y;
+					do{
+						do {
+							zombies.at(count).y = Random(SIZEY - 2);
+							zombies.at(count).x = Random(SIZEX - 2);
+						} while (spot.x != zombies.at(count).x || spot.y != zombies.at(count).y);
+						x = zombies.at(count).x;
+						y = zombies.at(count).y;
+					} while (!checkPillCoords(x, y, pills, holes, zombies, grid, teleport));
+				break;
 			case HOLE:
 				zombies.at(count).destroyed = true; //destroy zombies when collide with a hole
 				break;
@@ -950,7 +963,7 @@ void updateGrid(char grid[][SIZEX], Item spot, vector<Item> &holes, vector<Item>
 	void placeHoles(char[][SIZEX], vector<Item> holes);
 	void placePills(char[][SIZEX], vector<Item> pills);
 	void placeZombies(char[][SIZEX], vector<Item> zombies);
-	void moveZombies(char[][SIZEX], vector<Item> &zombies, Item spot, int key, int& lives, int noOfHoles);
+	void moveZombies(char[][SIZEX], vector<Item> &zombies, Item spot, int key, int& lives, int noOfHoles, vector<Item> pills, int countPills, Item teleport, vector<Item> holes);
 	void placeTeleport(char[][SIZEX], Item teleport);
 
 	setGrid(grid);	         //reset empty grid
@@ -959,7 +972,7 @@ void updateGrid(char grid[][SIZEX], Item spot, vector<Item> &holes, vector<Item>
 	placePills(grid, pills); //set pills in grid
 	placeTeleport(grid, teleport);
 	if (zombiesFrozen == FALSE){
-		moveZombies(grid, zombies, spot, key, lives, noOfHoles);
+		moveZombies(grid, zombies, spot, key, lives, noOfHoles, pills, countPills, teleport, holes);
 	}
 	if (wantToExterminate == TRUE && exterminated == false){
 		zombies.at(0).exterminated = true;
@@ -1022,7 +1035,19 @@ void updateSpotCoordinates(char g[][SIZEX], Item& sp, int key, string& mess, int
 	switch (g[targetY][targetX])
 	{		//...depending on what's on the target position in grid...
 	case TELEPORT:
-		setSpotInitialCoordinates(sp, g);
+		sp.y = Random(SIZEY - 2);      //vertical coordinate in range [1..(SIZEY - 3)]
+		sp.x = Random(SIZEX - 2);    //horizontal coordinate in range [1..(SIZEX - 3)]
+		if (sp.x == 0)	//checks that spot is not placed in a wall
+			sp.x = sp.x + 1;
+
+		if (sp.y == 0)	//checks that spot is not placed in a wall
+			sp.y = sp.y + 1;
+
+		if (sp.x == 1) //checks that spot is not in a zombie position
+			sp.x = sp.x + 1;
+
+		if (sp.y == 1) //checks that spot is not in a zombie position
+			sp.y = sp.y + 1;
 		break;
 	case TUNNEL:      //can move
 		sp.y += dy;   //go in that Y direction
