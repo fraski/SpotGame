@@ -121,7 +121,7 @@ void gameEntry() //first console screen
 			do {
 				cout << "Enter player name (20 characters max): ";
 				getline(cin, playerName); //user input
-			} while ((playerName.length() > 20) || (checkForSpaces(playerName) == true)); //run loop until user enters a valid name (less than 20, no spaces)
+			} while ((playerName.length() < 1) || (playerName.length() > 20) || (checkForSpaces(playerName) == true)); //run loop until user enters a valid name (less than 20, no spaces)
 			Clrscr(); //clear console window
 			do {
 				cout << "Which level would you like to start on?\n\n";
@@ -334,7 +334,6 @@ void enterGame(string playerName, int levelNo) //console screen where you play t
 
 }
 void replayGame(Item spot, vector<Item> zombies, vector<Item> pills, vector<Item> holes, int noOfPills, int noOfHoles){
-	//an attempt, but I believe it will go wrong. 
 	int turn = 0;
 	Clrscr();
 	char grid[SIZEY][SIZEX];
@@ -356,7 +355,6 @@ void replayGame(Item spot, vector<Item> zombies, vector<Item> pills, vector<Item
 		for (int x = 0; x < 12; x++){
 			grid[holes.at(x).historyY.at(0)][holes.at(x).historyX.at(0)] = HOLE;
 		}
-		//if (turn == 0){
 		for (int x = 0; x < 8; x++){
 			if (pills.at(x).historyState.at(turn) == 0){
 				grid[pills.at(x).historyY.at(0)][pills.at(x).historyX.at(0)] = PILL;
@@ -371,13 +369,12 @@ void replayGame(Item spot, vector<Item> zombies, vector<Item> pills, vector<Item
 				}
 			}
 		}
-		//}
 
 		if (spot.historyState.at(turn) == 0)
 			grid[spot.historyY.at(turn)][spot.historyX.at(turn)] = SPOT;
 
 		paintGrid(grid, magicProtection);
-		Sleep(1000);
+		Sleep(500);
 		turn++;
 		magicCounter--;
 
