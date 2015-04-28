@@ -115,7 +115,7 @@ void gameEntry() //first console screen
 			do {
 				cout << "Enter player name (20 characters max): ";
 				getline(cin, playerName); //user input
-			} while ((playerName.length() > 20) || (checkForSpaces(playerName) == true)); //run loop until user enters a valid name (less than 20, no spaces)
+			} while ((playerName.length() < 1) || (playerName.length() > 20) || (checkForSpaces(playerName) == true)); //run loop until user enters a valid name (less than 20, no spaces)
 			Clrscr(); //clear console window
 			enterGame(playerName); //pass playername into function by value
 		}
