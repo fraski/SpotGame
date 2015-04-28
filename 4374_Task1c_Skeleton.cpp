@@ -674,11 +674,11 @@ void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key, 
 					int x, y;
 					do{
 						do {
-							zombies.at(count).y = Random(SIZEY - 2);
-							zombies.at(count).x = Random(SIZEX - 2);
-						} while (spot.x != zombies.at(count).x || spot.y != zombies.at(count).y);
-						x = zombies.at(count).x;
-						y = zombies.at(count).y;
+							x = (Random(SIZEX - 2));
+							y = (Random(SIZEY - 2));
+						} while (spot.x == x && spot.y == y);
+						zombie.x = x;
+						zombie.y = y;
 					} while (!checkPillCoords(x, y, pills, holes, zombies, grid, teleport));
 				break;
 			case HOLE:
