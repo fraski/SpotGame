@@ -306,6 +306,9 @@ void enterGame(string playerName, int levelNo) //console screen where you play t
 		else if (wantToReplay(key)){ //if key pressed is 'R'
 			replayGame(spot, zombies, pills, holes, noOfPills, noOfHoles); //call function to replay game
 		}
+		else if (key == -1){
+
+		}
 		else
 			message = "INVALID KEY!        "; //set 'Invalid key' message
 
@@ -1012,6 +1015,7 @@ void updateSpotCoordinates(const char g[][SIZEX], Item& sp, int key, string& mes
 		break;
 	}
 	if (sp.protectionOn == true){
+		Beep(700, 100);
 		sp.protectionCount--;
 		if (sp.protectionCount == 0){
 			sp.protectionOn = false;
@@ -1049,7 +1053,7 @@ void setKeyDirection(int key, int& dx, int& dy)
 		break;
 	case UP:	//when UP arrow is pressed...
 		dx = 0;
-		dy = -1;	//increase the Y coordinate
+		dy = -1;	//increase the Y coordinatee
 		break;
 	case DOWN:	//when DOWN arrow is pressed...
 		dx = 0;
@@ -1060,10 +1064,22 @@ void setKeyDirection(int key, int& dx, int& dy)
 
 int getKeyPress()
 { //get key or command selected by user
-	int keyPressed;
-	keyPressed = toupper(getch());      //read in the selected arrow key or command letter
-	while (keyPressed == 224)     //ignore symbol following cursor key
-		keyPressed = toupper(getch());
+	int keyPressed = -1;
+	clock_t timer = clock();
+	double duration = 0;
+	if (kbhit()){
+		keyPressed = toupper(getch());      //read in the selected arrow key or command letter
+	}
+	while ((keyPressed == 224 || keyPressed == -1) && duration < 1){     //ignore symbol following cursor key
+		if (kbhit()){
+			keyPressed = toupper(getch());
+
+		}
+		else{
+			keyPressed = -1;
+		}
+		duration = (clock() - timer) / (double)CLOCKS_PER_SEC;
+	}
 	return(keyPressed);
 } //end of getKeyPress
 
@@ -1161,8 +1177,9 @@ void paintGrid(const char g[][SIZEX], bool magicProtection)
 			case SPOT:
 				if (magicProtection == false)
 					SelectTextColour(clBlue);
-				else
+				else{
 					SelectTextColour(clMagenta);
+				}
 				break;
 			case HOLE:
 				SelectTextColour(clRed);
