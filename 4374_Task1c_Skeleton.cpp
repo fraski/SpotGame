@@ -1054,61 +1054,62 @@ void generateHoles(vector<Item> &holes, Item spot, vector<Item> zombies, char gr
 				//will repeat while loop if the Random number generated
 				//is either the spots location, or other hole locations
 			}
-		} while (!checkHoleCoords(x, y, holes, zombies, grid, teleport)); //loop through whilst s
-		Item hole = { HOLE, x, y };
-		hole.historyX.push_back(x);
-		hole.historyY.push_back(y);
+		} while (!checkHoleCoords(x, y, holes, zombies, grid, teleport)); //loop through whilst functoin returns false
+		Item hole = { HOLE, x, y }; //set up struct with HOLE and it's xy coordinates
+		hole.historyX.push_back(x); //save last hole's x coordinate by pushing element onto vector HOLE
+		hole.historyY.push_back(y);//save last hole's y coordinate by pushing element onto vector HOLE
 		hole.historyState.push_back(0);
-		holes.push_back(hole);
+		holes.push_back(hole); //save the item hole in vector
 	}
-	cout << "stop";
+	
 }
 
-bool checkHoleCoords(int x, int y, vector<Item> holes, vector<Item> zombies, char gr[][SIZEX], Item teleport){
-	bool isValid = true;
+bool checkHoleCoords(int x, int y, vector<Item> holes, vector<Item> zombies, char gr[][SIZEX], Item teleport){ //checks if random generated coords to place holes are valid
+	bool isValid = true; //initialise boolean value to true
 
-	if (teleport.x == x && teleport.y == y)
+	if (teleport.x == x && teleport.y == y) //if hole matches teleports coords
 	{
-		isValid = false;
+		isValid = false; //not valid
 	}
-	for (int count = 0; count < holes.size(); count++){
-		if (holes.at(count).x == x && holes.at(count).y == y){
-			isValid = false;
+	for (int count = 0; count < holes.size(); count++){ //loop through every hole
+		if (holes.at(count).x == x && holes.at(count).y == y){ //checks if more than one hole are reting to spawn on top of each other
+			isValid = false; //not valid
 		}
 	}
-	for (int count = 0; count < zombies.size(); count++){
-		if (zombies.at(count).x == x && zombies.at(count).y == y){
-			isValid = false;
+	for (int count = 0; count < zombies.size(); count++){ //loop through every zombie
+		if (zombies.at(count).x == x && zombies.at(count).y == y){ //checks if hole trying to spawn on top of a zombie
+			isValid = false; //not valid
 		}
 	}
 
-	if (gr[y][x] == WALL){
-		isValid = false;
+	if (gr[y][x] == WALL){ //checks if hole trying to spawn on top of a wall
+		isValid = false; //not valid
 	}
-	return isValid;
+	return isValid; //return boolean value
 }
 
-void placePills(char grid[][SIZEX], vector<Item> pills){
-	for (Item pill : pills){
-		if (pill.destroyed == false){
+void placePills(char grid[][SIZEX], vector<Item> pills){ //fucntion to place pills
+	for (Item pill : pills){ //for every pill existing in 'pills', put their values into pills
+		if (pill.destroyed == false){ //if pill still exists
 			int x, y;
+			//move pill's xy coordinates
 			y = pill.y;
 			x = pill.x;
 			//grid[row][col]
 
-			grid[y][x] = PILL;
+			grid[y][x] = PILL; //place pill on grid
 		}
 	}
 
 }
 
-void generatePills(vector<Item> &pills, Item spot, vector<Item> holes, vector<Item> zombies, char grid[][SIZEX], int countPills, Item teleport){
-	bool checkPillCoords(int, int, vector<Item>, vector<Item>, vector<Item>, char gr[][SIZEX], Item);
-	Seed();
-	for (int count = 0; count < countPills; count++){
+void generatePills(vector<Item> &pills, Item spot, vector<Item> holes, vector<Item> zombies, char grid[][SIZEX], int countPills, Item teleport){ //funtion that creates pills
+	bool checkPillCoords(int, int, vector<Item>, vector<Item>, vector<Item>, char gr[][SIZEX], Item); 
+	Seed(); // random number generator
+	for (int count = 0; count < countPills; count++){ //loop through every pills
 		int x, y;
-		do{
-			while ((y = Random(SIZEY - 2)) == spot.y){
+		do{ //whilst the pill coords are not valid, stay in this loop...
+			while ((y = Random(SIZEY - 2)) == spot.y){ 
 				//will repeat while loop if the Random number generated
 				//is either the spots location, or other hole locations
 			}
@@ -1117,44 +1118,44 @@ void generatePills(vector<Item> &pills, Item spot, vector<Item> holes, vector<It
 				//is either the spots location, or other hole locations
 			}
 		} while (!checkPillCoords(x, y, pills, holes, zombies, grid, teleport));
-		Item pill = { PILL, x, y };
-		pill.historyX.push_back(x);
-		pill.historyY.push_back(y);
+		Item pill = { PILL, x, y }; //declare struct
+		pill.historyX.push_back(x); //save last pill's x coord by pushing back onto vector
+		pill.historyY.push_back(y); //save last pill's y coord by pushing back onto vector
 		pill.historyState.push_back(0);
-		pills.push_back(pill);
+		pills.push_back(pill); //save the item pill in vector
 	}
 }
-bool checkPillCoords(int x, int y, vector<Item> pills, vector<Item> holes, vector<Item> zombies, char gr[][SIZEX], Item teleport){
+bool checkPillCoords(int x, int y, vector<Item> pills, vector<Item> holes, vector<Item> zombies, char gr[][SIZEX], Item teleport){ //checks if random pill placement is valid
 	bool isValid = true;
 
-	if (teleport.x == x && teleport.y == y)
+	if (teleport.x == x && teleport.y == y) //check if being spawned on the teleport
 	{
 		isValid = false;
 	}
 	
-	for (int count = 0; count < holes.size(); count++){
-		if (holes.at(count).x == x && holes.at(count).y == y){
-			isValid = false;
+	for (int count = 0; count < holes.size(); count++){ //loop through every hole
+		if (holes.at(count).x == x && holes.at(count).y == y){ //checks if a hole exists at that coord
+			isValid = false; //not valid
 		}
 	}
-	for (int count = 0; count < zombies.size(); count++){
-		if (zombies.at(count).x == x && zombies.at(count).y == y){
-			isValid = false;
+	for (int count = 0; count < zombies.size(); count++){//loop through every zombie
+		if (zombies.at(count).x == x && zombies.at(count).y == y){ //checks if zombie exists at that coord
+			isValid = false;//not valid
 		}
 	}
-	for (int count = 0; count < pills.size(); count++){
-		if (pills.at(count).x == x && pills.at(count).y == y){
-			isValid = false;
+	for (int count = 0; count < pills.size(); count++){ //loop through every pill
+		if (pills.at(count).x == x && pills.at(count).y == y){ //checks if trying to be placed on top of another pill
+			isValid = false;//not valid
 		}
 	}
-	if (gr[y][x] == WALL){
-		isValid = false;
+	if (gr[y][x] == WALL){ //checks if WALL is occupying that coordinate
+		isValid = false; //not valid
 	}
 
-	return isValid;
+	return isValid; //if all if statements failed, the coordinate is valid
 }
 
-void setSpotInitialCoordinates(Item& spot, char grid[][SIZEX]) //STILL NEED TO FIX INNER WALLS!!!!!!!!!!!!!
+void setSpotInitialCoordinates(Item& spot, char grid[][SIZEX]) 
 { //set spot coordinates inside the grid at random at beginning of game
 	spot.y = Random(SIZEY - 2);      //vertical coordinate in range [1..(SIZEY - 3)]
 	spot.x = Random(SIZEX - 2);    //horizontal coordinate in range [1..(SIZEX - 3)]
@@ -1169,13 +1170,13 @@ void setSpotInitialCoordinates(Item& spot, char grid[][SIZEX]) //STILL NEED TO F
 
 	if (spot.y == 1) //checks that spot is not in a zombie position
 		spot.y = spot.y + 1;
-	spot.historyX.push_back(spot.x);
-	spot.historyY.push_back(spot.y);
+	spot.historyX.push_back(spot.x); //push spot x coordinate into vector to save it
+	spot.historyY.push_back(spot.y);//push spot y coordinate into vector to save it
 	spot.historyState.push_back(0);
 
 } //end of setSpotInitialoordinates
 
-void setGrid(char grid[][SIZEX])
+void setGrid(char grid[][SIZEX]) //set grid	
 { //reset the empty grid configuration
 	void placeWalls(char gr[][SIZEX]);
 	for (int row(0); row < SIZEY; ++row) //for each column
