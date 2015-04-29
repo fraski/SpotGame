@@ -42,6 +42,8 @@ const char QUIT('Q');        //end the game
 const char PLAY('P');		//play the game
 const char INFO('I');		//get info about the game
 const char REPLAY('R');     //replay recent moves
+const char SAVE('S');
+const char LOAD('L');
 //defining the cheats
 const char FREEZE('F');		//freeze game
 const char EXTERMINATE('X');	//exterminate remaining zombies
@@ -65,6 +67,8 @@ struct Item{
 void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item> &holes, vector<Item> &pills, vector<Item> &zombies, int countPills, int noOfHoles, Item& teleport);
 bool isArrowKey(int k);
 void updateGame(char g[][SIZEX], Item& sp, int k, string& mess, vector<Item> &holes, vector<Item> &pills, int& lives, int& countPills, vector<Item> &zombies, bool zombiesFrozen, bool wantToExterminate, bool &exterminated, int noOfHoles, int noOfPills, Item teleport);
+void saveGame( Item sp, vector<Item> holes, vector<Item> pills, vector<Item> zombies, Item teleport,string playerName,int noOfHoles,int noOfPills,int lives,int levelNo);
+void loadGame(char g[][SIZEX],Item& sp, vector<Item>& holes, vector<Item>& pills, vector<Item>& zombies, Item& teleport, string playerName, int& noOfHoles, int& noOfPills, int& lives, int& levelNo);
 void renderGame(const char g[][SIZEX], string mess, string playerName, Item Spot);
 void quitProgram();
 void noLivesLeft();
@@ -77,7 +81,10 @@ bool wantToFreeze(int f);
 bool wantToEat(int e);
 bool wantToReplay(int r);
 bool wantToExterminateZombies(int x);
+bool wantToSave(int s);
+bool wantToLoad(int l);
 void enterGame(string playerName, int levelNo);
+bool haveSaveFile(string playerName);
 const string displayTime();
 const string s = "You are playing SPOT!\n\nSpot is a game where you (spot) have to try outrun the zombies with as many remaining pills as possible. You have 5 lives, which are deducted if a zombie hits you or you hit a hole.\n\nTo beat highscores, you must try complete the game in the shortest time and in the least amount of moves!\n\nCheats enabled in this Game:\nPress 'F' to freeze zombies\nPress 'X' to exterminate all zombies\nPress 'E' to eat all pills\n\nPress enter to return to entry screen";
 
@@ -231,6 +238,7 @@ bool checkForSpaces(string playerName) //check for spaces when user inputs name
 
 void enterGame(string playerName, int levelNo) //console screen where you play the game
 {   //local variable declarations 
+	
 	char grid[SIZEY][SIZEX];                //grid for display
 	Item spot = { SPOT };                   //Spot's symbol and position (0, 0) 
 	Item teleport = { TELEPORT };
@@ -272,8 +280,26 @@ void enterGame(string playerName, int levelNo) //console screen where you play t
 	void replayGame(Item spot, vector<Item> zombies, vector<Item> pills, vector<Item> holes, int noOfPills, int noOfHoles, Item teleport); //call function which will replay the game upon user key press
 
 	bool zombiesRemain(vector<Item> zombies); //function prototype
-	initialiseGame(grid, spot, holes, pills, zombies, noOfHoles, countPills, teleport);           //initialise grid (incl. walls and spot)
-	int key(' ');                         //create key to store keyboard events
+	
+	
+	int key(' ');      //create key to store keyboard events
+	if (haveSaveFile(playerName)){
+		cout << "Do you wish to load your previous game? Y/N";
+		do{
+			key = getKeyPress();
+			} while (key  != 'Y' && key  != 'N');
+		if (key == 'Y'){
+			loadGame(grid,spot, holes, pills, zombies, teleport, playerName, noOfHoles, noOfPills, lives, levelNo);
+		}
+		else{
+			initialiseGame(grid, spot, holes, pills, zombies, noOfHoles, countPills, teleport);
+		}
+	}
+	else{
+		initialiseGame(grid, spot, holes, pills, zombies, noOfHoles, countPills, teleport);           //initialise grid (incl. walls and spot)
+	}
+
+	key = ' ';
 	bool zombiesFrozen = FALSE, wantToExterminate = FALSE, exterminated = FALSE; //initialise local variables
 	do {
 		renderGame(grid, message, playerName, spot);        //render game state on screen
@@ -311,6 +337,9 @@ void enterGame(string playerName, int levelNo) //console screen where you play t
 		else if (wantToReplay(key)){ //if key pressed is 'R'
 			replayGame(spot, zombies, pills, holes, noOfPills, noOfHoles, teleport); //call function to replay game
 		}
+		else if (wantToSave(key)){
+			saveGame(spot,holes,pills,zombies,teleport,playerName,noOfHoles,noOfPills,lives,levelNo);
+		}
 		else if (key == -1){
 
 		}
@@ -343,6 +372,224 @@ void enterGame(string playerName, int levelNo) //console screen where you play t
 	}
 
 
+}
+bool haveSaveFile(string playerName){
+	bool saveFile = false;
+	ifstream file(playerName + "savefile.txt");
+	if (file){
+		saveFile = true;
+	}
+	return saveFile;
+}
+void loadGame(char grid[][SIZEX],Item& sp, vector<Item>& holes, vector<Item>& pills, vector<Item>& zombies, Item& teleport, string playerName, int& noOfHoles, int& noOfPills, int& lives, int& levelNo){
+	void setGrid(char[][SIZEX]);
+	void placeZombies(char gr[][SIZEX], vector<Item> zombies);
+	void placeSpot(char gr[][SIZEX], Item spot);
+	void placeHoles(char gr[][SIZEX], vector<Item> holes);
+	void placePills(char gr[][SIZEX], vector<Item> pills);
+	void placeTeleport(char gr[][SIZEX], Item teleport);
+	ifstream file(playerName + "savefile.txt");
+	string line;
+	getline(file, line);
+	int x = 0;
+	int z = 0;
+	string item = "";
+	//sort spot
+	while (line[x] != NULL){
+		while (line[x] != '#' && line[x] != NULL){
+			item += line[x];
+			x++;
+		}
+			switch (z){
+			case 0:
+				sp.x = stoi(item);
+				item = "";
+				z++;
+				break;
+			case 1:
+				sp.y = stoi(item);
+				item = "";
+				z++;
+				break;
+			case 2:
+				sp.protectionOn = stoi(item);
+				item = "";
+				z++;
+				break;
+			case 3:
+				sp.protectionCount = stoi(item);
+				item = "";
+				z++;
+				break;
+			case 4:
+				lives = stoi(item);
+				item = "";
+				z++;
+				break;
+			case 5:
+				levelNo = stoi(item);
+				item = "";
+				z++;
+				break;
+			
+		}
+		x++;
+	}
+	x = 0;
+	getline(file, line);
+	//sort holes
+	while (line[x] != NULL){
+		Item hole{ '0' };
+		for (int z = 0; z < 3; z++){
+			while (line[x] != '#' && line[x] != NULL){
+				item += line[x];
+				x++;
+			}
+			switch (z){
+			case 0:
+				hole.x = stoi(item);
+				item = "";
+				x++;
+				break;
+			case 1:
+				hole.y = stoi(item);
+				item = "";
+				x++;
+				break;
+			case 2:
+				hole.destroyed = stoi(item);
+				item = "";
+				x++;
+				break;
+			}
+
+		}
+		holes.push_back(hole);
+	}
+	x = 0;
+	getline(file, line);
+	//sort pills
+	while (line[x] != NULL){
+		Item pill{ '*' };
+		for (int z = 0; z < 3; z++){
+			while (line[x] != '#' && line[x] != NULL){
+				item += line[x];
+				x++;
+			}
+			switch (z){
+			case 0:
+				pill.x = stoi(item);
+				item = "";
+				x++;
+				break;
+			case 1:
+				pill.y = stoi(item);
+				item = "";
+				x++;
+				break;
+			case 2:
+				pill.destroyed = stoi(item);
+				item = "";
+				x++;
+				break;
+			}
+
+		}
+		pills.push_back(pill);
+	}
+	x = 0;
+	getline(file, line);
+	//sort zombies
+	while (line[x] != NULL){
+		Item zombie{ 'Z' };
+		for (int z = 0; z < 3; z++){
+			while (line[x] != '#' && line[x] != NULL){
+				item += line[x];
+				x++;
+			}
+			switch (z){
+			case 0:
+				zombie.x = stoi(item);
+				item = "";
+				x++;
+				break;
+			case 1:
+				zombie.y = stoi(item);
+				item = "";
+				x++;
+				break;
+			case 2:
+				zombie.destroyed = stoi(item);
+				item = "";
+				x++;
+				break;
+			}
+
+		}
+		zombies.push_back(zombie);
+		
+	}
+	x = 0;
+	z = 0;
+	getline(file, line);
+	while (line[x] != NULL){
+		while (line[x] != '#' && line[x] != NULL){
+			item += line[x];
+			x++;
+		}
+		switch (z){
+		case 0:
+			teleport.x = stoi(item);
+			item = "";
+			z++;
+			x++;
+			break;
+		case 1:
+			teleport.y = stoi(item);
+			item = "";
+			z++;
+			x++;
+			break;
+		}
+		cout << "stuck";
+	}
+	setGrid(grid);
+    //set spot in grid
+	placeSpot(grid, sp);         
+	placeTeleport(grid, teleport);
+	placeZombies(grid, zombies);
+	//generate and then place zombies
+	placeHoles(grid, holes);
+	//generate and then place holes
+	placePills(grid, pills);
+	//generate and then place pills
+
+
+}
+void saveGame(Item sp, vector<Item> holes, vector<Item> pills, vector<Item> zombies, Item teleport, string playerName, int noOfHoles, int noOfPills, int lives,int levelNo){
+	ofstream file(playerName + "savefile.txt");
+	if (file){
+		//first line should be spot, etc etc
+		file << sp.x << "#";
+		file << sp.y << "#";
+		file << sp.protectionOn << "#";
+		file << sp.protectionCount << "#";
+		file << lives<< "#" <<levelNo <<"#"<< endl;
+		for (int x = 0; x < noOfHoles; x++){
+			file << holes.at(x).x << "#" << holes.at(x).y << "#" << holes.at(x).destroyed << "#";
+		}
+		file << endl;
+		for (int x = 0; x < noOfPills; x++){
+			file << pills.at(x).x << "#" << pills.at(x).y << "#" << pills.at(x).destroyed << "#";
+		}
+		file << endl;
+		for (int x = 0; x < 4; x++){
+			file << zombies.at(x).x << "#" << zombies.at(x).y << "#" << zombies.at(x).destroyed << "#";
+		}
+		file << endl;
+		file << teleport.x << "#";
+		file << teleport.y << "#" << endl;
+	}
 }
 void replayGame(Item spot, vector<Item> zombies, vector<Item> pills, vector<Item> holes, int noOfPills, int noOfHoles, Item teleport){
 	int turn = 0;
@@ -1181,7 +1428,12 @@ bool wantToQuit(int key)
 { //check if the key pressed is 'Q'
 	return (key == QUIT);
 } //end of wantToQuit
-
+bool wantToSave(int key){
+	return(key == SAVE);
+}
+bool wantToLoad(int key){
+	return(key == LOAD);
+}
 bool wantToPlay(int key)
 { //check if key 'P' is pressed
 	return (key == PLAY);
