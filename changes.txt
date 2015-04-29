@@ -1,0 +1,84 @@
+
+void doScoreStuff(string playerName, int lives, int levelNo) //calculate high scores, passing in current players name and lives left over
+{
+	string sScore; //initialise variable to read current highscore in file
+	int highScore = 0; //initialise highscore as 0
+	ifstream inFile(playerName + ".txt"); //declare file variable for input named with the playername variable, followed by .txt to save as score file
+	
+
+	if (inFile){ //if file exists
+		getline(inFile, sScore); //read line from scr file and store in string score
+
+		if (!sScore.empty()){//if string is not empty...
+			highScore = stoi(sScore); //...convert string to integer, stored in highScore
+		}
+	}
+
+
+	
+	if (lives > highScore) { //if lives in current game is greater than a highscore stored
+		ofstream file(playerName + ".txt"); //declare output file
+		file << lives; //store integer 'lives' into the scr file
+		file.clear(); //clear contents of file
+		file.close();//close output file
+		
+	}
+	
+
+	inFile.close();//close input file
+	
+	highScore = 0;
+	string highestScores;
+	ifstream input(levelNo + ".txt");
+
+	if (input)
+	{
+		getline(input, highestScores);
+		if (!highestScores.empty())
+		{
+			highScore = stoi(highestScores);
+		}
+	}
+
+	ofstream file(levelNo + ".txt");
+	file << playerName, " ", lives;
+	file.clear();
+	file.close();
+
+	input.close();
+
+}
+
+
+********************************
+
+
+
+
+
+
+	void doScoreStuff(string, int, int); //call function which calculates score for current game 
+
+
+
+
+
+******************************
+
+
+
+{
+		doScoreStuff(playerName, lives, levelNo); //check and save high score to file if needed
+		noLivesLeft(); //quit the game and display relevant message
+	}
+	else if (wantToQuit(key)) //if user wants to quit...
+	{
+		doScoreStuff(playerName, lives, levelNo); //check and save high score to file if needed
+		quitProgram(); //quit the game and display relevant message
+	}
+	else if (zombiesRemain(zombies) == false) //if no more zombies in the grid...
+	{
+		updateGame(grid, spot, key, message, holes, pills, lives, countPills, zombies, zombiesFrozen, wantToExterminate, exterminated, noOfHoles, noOfPills, teleport);
+		doScoreStuff(playerName, lives, levelNo); //check and save high score to file if needed
+		noZombiesLeft(countPills, levelNo, playerName); //quit the game and display relevant message
+	}
