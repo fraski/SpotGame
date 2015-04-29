@@ -67,8 +67,8 @@ struct Item{
 void initialiseGame(char grid[][SIZEX], Item& spot, vector<Item> &holes, vector<Item> &pills, vector<Item> &zombies, int countPills, int noOfHoles, Item& teleport);
 bool isArrowKey(int k);
 void updateGame(char g[][SIZEX], Item& sp, int k, string& mess, vector<Item> &holes, vector<Item> &pills, int& lives, int& countPills, vector<Item> &zombies, bool zombiesFrozen, bool wantToExterminate, bool &exterminated, int noOfHoles, int noOfPills, Item teleport);
-void saveGame( Item sp, vector<Item> holes, vector<Item> pills, vector<Item> zombies, Item teleport,string playerName,int noOfHoles,int noOfPills,int lives,int levelNo);
-void loadGame(char g[][SIZEX],Item& sp, vector<Item>& holes, vector<Item>& pills, vector<Item>& zombies, Item& teleport, string playerName, int& noOfHoles, int& noOfPills, int& lives, int& levelNo);
+void saveGame(Item sp, vector<Item> holes, vector<Item> pills, vector<Item> zombies, Item teleport, string playerName, int noOfHoles, int noOfPills, int countPills, int lives, int levelNo);
+void loadGame(char g[][SIZEX], Item& sp, vector<Item>& holes, vector<Item>& pills, vector<Item>& zombies, Item& teleport, string playerName, int& noOfHoles, int& noOfPills, int& countPills, int& lives, int& levelNo);
 void renderGame(const char g[][SIZEX], string mess, string playerName, Item Spot);
 void quitProgram();
 void noLivesLeft();
@@ -196,7 +196,7 @@ void outputText(string s) //function which processes the string, implements word
 	cout << s << endl; //output the string
 }
 
-void doScoreStuff(string playerName, int lives) //calculate high scores, passing in current players name and lives left over
+void doScoreStuff(string playerName, int lives,int levelNo) //calculate high scores, passing in current players name and lives left over
 {
 	string sScore; //initialise variable to read current highscore in file
 	int highScore = 0; //initialise highscore as 0
@@ -220,6 +220,44 @@ void doScoreStuff(string playerName, int lives) //calculate high scores, passing
 	}
 
 	inFile.close();//close input file
+	
+	highScore = 0;
+	string highestScores;
+	ifstream input(levelNo + ".txt");
+	int topHighScores[3];
+	if (input)
+	{
+		for (int x = 0; x < 3; x++){
+			getline(input, highestScores);
+			if (!highestScores.empty())
+			{
+				highScore = stoi(highestScores);
+				topHighScores[x] = highScore;
+			}
+			
+		}
+	}
+	bool carry = true;
+	int x = 0;
+	while (carry){
+		if (lives > topHighScores[x]){
+			topHighScores[x] = lives;
+			carry = false;
+		}
+		else if (x == 2){
+			carry = false;
+		}
+	}
+
+	ofstream file(levelNo + ".txt");
+	for (int z = 0; z < 3; z++){
+		file << topHighScores[x];
+		file.clear();
+	}
+	file.close();
+
+	input.close();
+
 }
 
 
@@ -238,7 +276,7 @@ bool checkForSpaces(string playerName) //check for spaces when user inputs name
 
 void enterGame(string playerName, int levelNo) //console screen where you play the game
 {   //local variable declarations 
-	
+
 	char grid[SIZEY][SIZEX];                //grid for display
 	Item spot = { SPOT };                   //Spot's symbol and position (0, 0) 
 	Item teleport = { TELEPORT };
@@ -265,7 +303,7 @@ void enterGame(string playerName, int levelNo) //console screen where you play t
 		noOfHoles = 2;
 		countPills = 2;
 		lives = 3;
-		break; 
+		break;
 	}
 
 	int noOfPills = countPills; //set pill count after level has been chosen
@@ -275,21 +313,21 @@ void enterGame(string playerName, int levelNo) //console screen where you play t
 	vector<Item> pills;
 	vector<Item> zombies;
 
-	void doScoreStuff(string, int); //call function which calculates score for current game 
+	void doScoreStuff(string, int,int); //call function which calculates score for current game 
 
 	void replayGame(Item spot, vector<Item> zombies, vector<Item> pills, vector<Item> holes, int noOfPills, int noOfHoles, Item teleport); //call function which will replay the game upon user key press
 
 	bool zombiesRemain(vector<Item> zombies); //function prototype
-	
-	
+
+
 	int key(' ');      //create key to store keyboard events
 	if (haveSaveFile(playerName)){
 		cout << "Do you wish to load your previous game? Y/N";
 		do{
 			key = getKeyPress();
-			} while (key  != 'Y' && key  != 'N');
+		} while (key != 'Y' && key != 'N');
 		if (key == 'Y'){
-			loadGame(grid,spot, holes, pills, zombies, teleport, playerName, noOfHoles, noOfPills, lives, levelNo);
+			loadGame(grid, spot, holes, pills, zombies, teleport, playerName, noOfHoles, noOfPills, countPills, lives, levelNo);
 		}
 		else{
 			initialiseGame(grid, spot, holes, pills, zombies, noOfHoles, countPills, teleport);
@@ -315,7 +353,7 @@ void enterGame(string playerName, int levelNo) //console screen where you play t
 				zombiesFrozen = TRUE; //set to true when 'F' has been pressed once
 			else
 				zombiesFrozen = FALSE; //set to false then user want's to unfreeze
-			
+
 		}
 		else if (wantToExterminateZombies(key)) //if key pressed is 'X'
 		{
@@ -332,13 +370,13 @@ void enterGame(string playerName, int levelNo) //console screen where you play t
 				pills.at(count).destroyed = true; //destroy a pill from items
 			countPills = 0; //set to 0 as all pills now destroyed
 			updateGame(grid, spot, key, message, holes, pills, lives, countPills, zombies, zombiesFrozen, wantToExterminate, exterminated, noOfHoles, noOfPills, teleport); //call function to remove pills from grid
-			
+
 		}
 		else if (wantToReplay(key)){ //if key pressed is 'R'
 			replayGame(spot, zombies, pills, holes, noOfPills, noOfHoles, teleport); //call function to replay game
 		}
 		else if (wantToSave(key)){
-			saveGame(spot,holes,pills,zombies,teleport,playerName,noOfHoles,noOfPills,lives,levelNo);
+			saveGame(spot, holes, pills, zombies, teleport, playerName, noOfHoles, noOfPills, countPills, lives, levelNo);
 		}
 		else if (key == -1){
 
@@ -352,22 +390,22 @@ void enterGame(string playerName, int levelNo) //console screen where you play t
 		cout << ("Lives: ") << lives << "   "; //output remaining lives to user
 		cout << ("Pills: ") << countPills; //output remaining pills to user
 		Gotoxy(40, 15);
-		cout << ("Time: ") << (int)difftime(timer,current)*-1;
+		cout << ("Time: ") << (int)difftime(timer, current)*-1;
 	} while (!wantToQuit(key) && lives > 0 && zombiesRemain(zombies) == true); //while user has lives, doesn't want to quit or zombies still in the grid
 	if (lives <= 0)	//if no more lives left...
 	{
-		doScoreStuff(playerName, lives); //check and save high score to file if needed
+		doScoreStuff(playerName, lives,levelNo); //check and save high score to file if needed
 		noLivesLeft(); //quit the game and display relevant message
 	}
 	else if (wantToQuit(key)) //if user wants to quit...
 	{
-		doScoreStuff(playerName, lives); //check and save high score to file if needed
+		doScoreStuff(playerName, lives,levelNo); //check and save high score to file if needed
 		quitProgram(); //quit the game and display relevant message
 	}
 	else if (zombiesRemain(zombies) == false) //if no more zombies in the grid...
 	{
 		updateGame(grid, spot, key, message, holes, pills, lives, countPills, zombies, zombiesFrozen, wantToExterminate, exterminated, noOfHoles, noOfPills, teleport);
-		doScoreStuff(playerName, lives); //check and save high score to file if needed
+		doScoreStuff(playerName, lives,levelNo); //check and save high score to file if needed
 		noZombiesLeft(countPills, levelNo, playerName); //quit the game and display relevant message
 	}
 
@@ -381,7 +419,7 @@ bool haveSaveFile(string playerName){
 	}
 	return saveFile;
 }
-void loadGame(char grid[][SIZEX],Item& sp, vector<Item>& holes, vector<Item>& pills, vector<Item>& zombies, Item& teleport, string playerName, int& noOfHoles, int& noOfPills, int& lives, int& levelNo){
+void loadGame(char grid[][SIZEX], Item& sp, vector<Item>& holes, vector<Item>& pills, vector<Item>& zombies, Item& teleport, string playerName, int& noOfHoles, int& noOfPills, int& countPills, int& lives, int& levelNo){
 	void setGrid(char[][SIZEX]);
 	void placeZombies(char gr[][SIZEX], vector<Item> zombies);
 	void placeSpot(char gr[][SIZEX], Item spot);
@@ -400,38 +438,42 @@ void loadGame(char grid[][SIZEX],Item& sp, vector<Item>& holes, vector<Item>& pi
 			item += line[x];
 			x++;
 		}
-			switch (z){
-			case 0:
-				sp.x = stoi(item);
-				item = "";
-				z++;
-				break;
-			case 1:
-				sp.y = stoi(item);
-				item = "";
-				z++;
-				break;
-			case 2:
-				sp.protectionOn = stoi(item);
-				item = "";
-				z++;
-				break;
-			case 3:
-				sp.protectionCount = stoi(item);
-				item = "";
-				z++;
-				break;
-			case 4:
-				lives = stoi(item);
-				item = "";
-				z++;
-				break;
-			case 5:
-				levelNo = stoi(item);
-				item = "";
-				z++;
-				break;
-			
+		switch (z){
+		case 0:
+			sp.x = stoi(item);
+			item = "";
+			z++;
+			break;
+		case 1:
+			sp.y = stoi(item);
+			item = "";
+			z++;
+			break;
+		case 2:
+			sp.protectionOn = stoi(item);
+			item = "";
+			z++;
+			break;
+		case 3:
+			sp.protectionCount = stoi(item);
+			item = "";
+			z++;
+			break;
+		case 4:
+			lives = stoi(item);
+			item = "";
+			z++;
+			break;
+		case 5:
+			levelNo = stoi(item);
+			item = "";
+			z++;
+			break;
+		case 6:
+			countPills = stoi(item);
+			item = "";
+			z++;
+			break;
 		}
 		x++;
 	}
@@ -527,7 +569,7 @@ void loadGame(char grid[][SIZEX],Item& sp, vector<Item>& holes, vector<Item>& pi
 
 		}
 		zombies.push_back(zombie);
-		
+
 	}
 	x = 0;
 	z = 0;
@@ -554,8 +596,8 @@ void loadGame(char grid[][SIZEX],Item& sp, vector<Item>& holes, vector<Item>& pi
 		cout << "stuck";
 	}
 	setGrid(grid);
-    //set spot in grid
-	placeSpot(grid, sp);         
+	//set spot in grid
+	placeSpot(grid, sp);
 	placeTeleport(grid, teleport);
 	placeZombies(grid, zombies);
 	//generate and then place zombies
@@ -566,7 +608,7 @@ void loadGame(char grid[][SIZEX],Item& sp, vector<Item>& holes, vector<Item>& pi
 
 
 }
-void saveGame(Item sp, vector<Item> holes, vector<Item> pills, vector<Item> zombies, Item teleport, string playerName, int noOfHoles, int noOfPills, int lives,int levelNo){
+void saveGame(Item sp, vector<Item> holes, vector<Item> pills, vector<Item> zombies, Item teleport, string playerName, int noOfHoles, int noOfPills, int countPills, int lives, int levelNo){
 	ofstream file(playerName + "savefile.txt");
 	if (file){
 		//first line should be spot, etc etc
@@ -574,7 +616,7 @@ void saveGame(Item sp, vector<Item> holes, vector<Item> pills, vector<Item> zomb
 		file << sp.y << "#";
 		file << sp.protectionOn << "#";
 		file << sp.protectionCount << "#";
-		file << lives<< "#" <<levelNo <<"#"<< endl;
+		file << lives << "#" << levelNo << "#" << countPills << "#" << endl;
 		for (int x = 0; x < noOfHoles; x++){
 			file << holes.at(x).x << "#" << holes.at(x).y << "#" << holes.at(x).destroyed << "#";
 		}
@@ -601,7 +643,7 @@ void replayGame(Item spot, vector<Item> zombies, vector<Item> pills, vector<Item
 	int magicCounter = 0;
 	cout << spot.historyX.size();
 	while (turn < spot.historyX.size()){
-	
+
 		setGrid(grid);
 
 		for (int x = 0; x < noOfHoles; x++){
@@ -613,7 +655,7 @@ void replayGame(Item spot, vector<Item> zombies, vector<Item> pills, vector<Item
 			}
 			else{
 				if (turn > 0){
-					if (pills.at(x).historyState.at(turn-1) == 0){
+					if (pills.at(x).historyState.at(turn - 1) == 0){
 						magicProtection = true;
 						magicCounter = 10;
 					}
@@ -640,7 +682,7 @@ void replayGame(Item spot, vector<Item> zombies, vector<Item> pills, vector<Item
 		Sleep(500);
 		cout << magicCounter << endl;
 		turn++;
-		
+
 		if (magicCounter == 0){
 			magicProtection = false;
 		}
@@ -828,8 +870,9 @@ void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key, 
 	{
 		if (zombie.destroyed == true){ //if zombie has been hit by spot
 			zombies.at(count).historyState.push_back(1); //return zombie to original starting point
-		
-		}else{ //if zombie has not been hit by spot
+
+		}
+		else{ //if zombie has not been hit by spot
 			int random = Random(3); //initialise 3 random moves for zombie to take
 			int move;
 			int origX = zombie.x; //put zombie's current x value into variable
@@ -918,15 +961,15 @@ void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key, 
 			case TELEPORT:
 				bool checkPillCoords(int, int, vector<Item>, vector<Item>, vector<Item>, char gr[][SIZEX], Item);
 				Seed();
-					int x, y;
-					do{
-						do {
-							x = (Random(SIZEX - 2));
-							y = (Random(SIZEY - 2));
-						} while (spot.x == x && spot.y == y);
-						zombie.x = x;
-						zombie.y = y;
-					} while (!checkPillCoords(x, y, pills, holes, zombies, grid, teleport));
+				int x, y;
+				do{
+					do {
+						x = (Random(SIZEX - 2));
+						y = (Random(SIZEY - 2));
+					} while (spot.x == x && spot.y == y);
+					zombie.x = x;
+					zombie.y = y;
+				} while (!checkPillCoords(x, y, pills, holes, zombies, grid, teleport));
 				break;
 			case HOLE:
 				zombies.at(count).destroyed = true; //destroy zombies when collide with a hole
@@ -961,7 +1004,7 @@ void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key, 
 						break;
 					}
 				}
-				
+
 				break;
 			}
 
@@ -971,12 +1014,12 @@ void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key, 
 			zombies.at(count).historyX.push_back(zombie.x);
 			zombies.at(count).historyY.push_back(zombie.y);
 			zombies.at(count).historyState.push_back(0);
-			
+
 		}
 		count++; //increment to go to next zombie
-	
+
 	}
-	
+
 	for (int x = 0; x < 4; x++){ //looping through 4 times 
 		for (int zom = 0; zom < 4; zom++){ //looping through 4 times 
 			if (zombies.at(x).x == zombies.at(zom).x && zombies.at(x).y == zombies.at(zom).y && x != zom && zombies.at(x).destroyed == false && zombies.at(zom).destroyed == false){ //checking if zombies collide
@@ -1024,10 +1067,10 @@ void moveZombies(char grid[][SIZEX], vector<Item> &zombies, Item spot, int key, 
 					break;
 				}
 			}
-			
+
 		}
 	}
-	
+
 }
 
 void placeHoles(char grid[][SIZEX], vector<Item> holes){  //function to place holes
@@ -1061,7 +1104,7 @@ void generateHoles(vector<Item> &holes, Item spot, vector<Item> zombies, char gr
 		hole.historyState.push_back(0);
 		holes.push_back(hole); //save the item hole in vector
 	}
-	
+
 }
 
 bool checkHoleCoords(int x, int y, vector<Item> holes, vector<Item> zombies, char gr[][SIZEX], Item teleport){ //checks if random generated coords to place holes are valid
@@ -1104,12 +1147,12 @@ void placePills(char grid[][SIZEX], vector<Item> pills){ //fucntion to place pil
 }
 
 void generatePills(vector<Item> &pills, Item spot, vector<Item> holes, vector<Item> zombies, char grid[][SIZEX], int countPills, Item teleport){ //funtion that creates pills
-	bool checkPillCoords(int, int, vector<Item>, vector<Item>, vector<Item>, char gr[][SIZEX], Item); 
+	bool checkPillCoords(int, int, vector<Item>, vector<Item>, vector<Item>, char gr[][SIZEX], Item);
 	Seed(); // random number generator
 	for (int count = 0; count < countPills; count++){ //loop through every pills
 		int x, y;
 		do{ //whilst the pill coords are not valid, stay in this loop...
-			while ((y = Random(SIZEY - 2)) == spot.y){ 
+			while ((y = Random(SIZEY - 2)) == spot.y){
 				//will repeat while loop if the Random number generated
 				//is either the spots location, or other hole locations
 			}
@@ -1132,7 +1175,7 @@ bool checkPillCoords(int x, int y, vector<Item> pills, vector<Item> holes, vecto
 	{
 		isValid = false;
 	}
-	
+
 	for (int count = 0; count < holes.size(); count++){ //loop through every hole
 		if (holes.at(count).x == x && holes.at(count).y == y){ //checks if a hole exists at that coord
 			isValid = false; //not valid
@@ -1155,7 +1198,7 @@ bool checkPillCoords(int x, int y, vector<Item> pills, vector<Item> holes, vecto
 	return isValid; //if all if statements failed, the coordinate is valid
 }
 
-void setSpotInitialCoordinates(Item& spot, char grid[][SIZEX]) 
+void setSpotInitialCoordinates(Item& spot, char grid[][SIZEX])
 { //set spot coordinates inside the grid at random at beginning of game
 	spot.y = Random(SIZEY - 2);      //vertical coordinate in range [1..(SIZEY - 3)]
 	spot.x = Random(SIZEX - 2);    //horizontal coordinate in range [1..(SIZEX - 3)]
@@ -1274,7 +1317,7 @@ void updateSpotCoordinates(char g[][SIZEX], Item& sp, int key, string& mess, int
 
 	//calculate direction of movement required by key - if any
 	int dx(0), dy(0);
-	
+
 	setKeyDirection(key, dx, dy); 	//find direction indicated by key
 	//check new target position in grid 
 	//and update spot coordinates if move is possible
@@ -1330,7 +1373,7 @@ void updateSpotCoordinates(char g[][SIZEX], Item& sp, int key, string& mess, int
 		sp.protectionOn = true;
 		if (noOfPills == 8){
 			sp.protectionCount = 10;
-			
+
 		}
 		else if (noOfPills == 5){
 			sp.protectionCount = 8;
@@ -1338,7 +1381,7 @@ void updateSpotCoordinates(char g[][SIZEX], Item& sp, int key, string& mess, int
 		else if (noOfPills == 2){
 			sp.protectionCount = 5;
 		}
-	
+
 		break;
 	case ZOMBIE:
 		if (sp.protectionOn == true){
